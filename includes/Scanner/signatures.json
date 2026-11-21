@@ -1,0 +1,403 @@
+{
+ "schema": 1,
+ "version": "2026.11.21",
+ "signatures": [
+  {
+   "id": "PHP.Eval.Base64",
+   "name": "eval() of base64-decoded data",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\b(?:eval|assert)\\s*\\(\\s*(?:@\\s*)?(?:base64_decode|gzinflate|gzuncompress|gzdecode|str_rot13|strrev|convert_uudecode|hex2bin)\\s*\\("
+  },
+  {
+   "id": "PHP.Eval.Request",
+   "name": "eval()/assert() of request data",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\b(?:eval|assert|create_function)\\s*\\(\\s*(?:@\\s*)?(?:stripslashes\\s*\\(\\s*)?\\$_(?:GET|POST|REQUEST|COOKIE|SERVER|FILES)\\b"
+  },
+  {
+   "id": "PHP.Exec.Request",
+   "name": "Shell execution of request data",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\b(?:system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)\\s*\\(\\s*(?:@\\s*)?(?:stripslashes\\s*\\(\\s*|base64_decode\\s*\\(\\s*)?\\$_(?:GET|POST|REQUEST|COOKIE|SERVER)\\b"
+  },
+  {
+   "id": "PHP.Backtick.Request",
+   "name": "Backtick shell execution of request data",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "`\\s*\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\["
+  },
+  {
+   "id": "PHP.PregReplace.Eval",
+   "name": "preg_replace with /e modifier",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\bpreg_replace\\s*\\(\\s*['\\\"]([^\\w\\s\\\\])(?:(?!\\1).)*\\1[imsxuADSUX]*e[imsxuADSUX]*['\\\"]"
+  },
+  {
+   "id": "PHP.VariableFunction.Request",
+   "name": "Variable function called from request data",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\[\\s*['\\\"]?\\w*['\\\"]?\\s*\\]\\s*\\(\\s*\\$_(?:GET|POST|REQUEST|COOKIE)"
+  },
+  {
+   "id": "PHP.Include.Request",
+   "name": "Include of request-controlled path",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\b(?:include|require)(?:_once)?\\s*\\(?\\s*\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\["
+  },
+  {
+   "id": "PHP.FileWrite.Request",
+   "name": "Writes request data to a file",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\b(?:file_put_contents|fwrite|fputs)\\s*\\([^;]{0,120}\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\[[^;]{0,80}\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\["
+  },
+  {
+   "id": "PHP.Upload.Unrestricted",
+   "name": "Unrestricted file uploader",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "move_uploaded_file\\s*\\(\\s*\\$_FILES\\s*\\[[^\\]]+\\]\\s*\\[\\s*['\\\"]tmp_name['\\\"]\\s*\\]\\s*,\\s*\\$_FILES\\s*\\[[^\\]]+\\]\\s*\\[\\s*['\\\"]name['\\\"]\\s*\\]\\s*\\)"
+  },
+  {
+   "id": "PHP.Obfuscation.CharChain",
+   "name": "Function name built from chr()/character concatenation",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "(?:chr\\s*\\(\\s*\\d+\\s*\\)\\s*\\.\\s*){6,}"
+  },
+  {
+   "id": "PHP.Obfuscation.HexString",
+   "name": "Long hex-escaped string (common obfuscation)",
+   "severity": "medium",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "(?:\\\\x[0-9a-f]{2}){40,}"
+  },
+  {
+   "id": "PHP.Obfuscation.GlobalsArray",
+   "name": "Obfuscated $GLOBALS function dispatch",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\$GLOBALS\\s*\\[\\s*['\\\"][^'\\\"]{1,40}['\\\"]\\s*\\]\\s*\\[\\s*\\d+\\s*\\]\\s*\\(\\s*\\$GLOBALS\\s*\\[\\s*['\\\"][^'\\\"]{1,40}['\\\"]\\s*\\]\\s*\\[\\s*\\d+\\s*\\]"
+  },
+  {
+   "id": "PHP.Obfuscation.LongBase64Eval",
+   "name": "Large base64 blob passed to decoder",
+   "severity": "medium",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "(?:base64_decode|gzinflate|str_rot13)\\s*\\(\\s*['\\\"][a-z0-9+/=]{2000,}['\\\"]"
+  },
+  {
+   "id": "PHP.Obfuscation.Goto",
+   "name": "Goto-spaghetti obfuscation",
+   "severity": "medium",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "(?:\\bgoto\\s+[a-z0-9_]{4,}\\s*;\\s*[a-z0-9_]{4,}\\s*:\\s*){10,}"
+  },
+  {
+   "id": "PHP.Webshell.Markers",
+   "name": "Known web shell signature",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps",
+    "js",
+    "html",
+    "htm",
+    "svg",
+    "ico",
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "txt",
+    "suspected",
+    "bak",
+    "zip"
+   ],
+   "pattern": "(?:FilesMan|WSO\\s+[\\d.]+|b374k|c99shell|r57shell|IndoXploit|Uname:\\s*<|safe_mode\\s*:\\s*<b>|\\bAnonSec\\b|mini\\s*shell\\s*by|Shell\\s+Uploader|tinyfilemanager|alfa_?(?:shell|team)|Sh3ll|h4x0r|\\bP\\.A\\.S\\.\\s*Fork|marijuana\\s*shell)"
+  },
+  {
+   "id": "PHP.Backdoor.AdminCreate",
+   "name": "Code that silently creates an administrator",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "wp_(?:create|insert)_user\\s*\\([^;]{0,300}\\)\\s*;[\\s\\S]{0,300}?->set_role\\s*\\(\\s*['\\\"]administrator['\\\"]"
+  },
+  {
+   "id": "PHP.Backdoor.AuthBypass",
+   "name": "Login bypass via wp_set_auth_cookie on request parameter",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "if\\s*\\(\\s*(?:isset\\s*\\(\\s*)?\\$_(?:GET|POST|REQUEST|COOKIE)\\s*\\[[^\\]]+\\][^{]{0,120}\\{[^}]{0,300}wp_set_auth_cookie\\s*\\("
+  },
+  {
+   "id": "PHP.Backdoor.HiddenUser",
+   "name": "Hides a user from the admin users list",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "pre_user_query[\\s\\S]{0,400}?user_login\\s*!=\\s*['\\\"]"
+  },
+  {
+   "id": "PHP.Mailer.Spam",
+   "name": "Mass-mailer script",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps"
+   ],
+   "pattern": "\\bmail\\s*\\(\\s*\\$_(?:POST|GET|REQUEST)\\s*\\[[^\\]]+\\]\\s*,\\s*\\$_(?:POST|GET|REQUEST)"
+  },
+  {
+   "id": "JS.Injected.Redirect",
+   "name": "Injected script redirect / malvertising loader",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps",
+    "js",
+    "html",
+    "htm",
+    "svg"
+   ],
+   "pattern": "(?:String\\.fromCharCode\\s*\\(\\s*(?:\\d+\\s*,\\s*){30,}|document\\.write\\s*\\(\\s*unescape\\s*\\(\\s*['\\\"]%3c(?:script|iframe)|eval\\s*\\(\\s*function\\s*\\(\\s*p\\s*,\\s*a\\s*,\\s*c\\s*,\\s*k\\s*,\\s*e\\s*,\\s*[dr]\\s*\\)[\\s\\S]{0,4000}?(?:window\\.location|document\\.location|\\.src\\s*=))"
+  },
+  {
+   "id": "JS.Cryptominer",
+   "name": "Browser cryptocurrency miner",
+   "severity": "high",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps",
+    "js",
+    "html",
+    "htm",
+    "svg"
+   ],
+   "pattern": "(?:coinhive\\.min\\.js|CoinHive\\.Anonymous|coin-hive\\.com|cryptoloot|webminepool|minero\\.cc|new\\s+CRLT\\.Anonymous)"
+  },
+  {
+   "id": "JS.Skimmer",
+   "name": "Payment card skimmer",
+   "severity": "critical",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps",
+    "js",
+    "html",
+    "htm",
+    "svg"
+   ],
+   "pattern": "(?:\\b(?:cc_?number|cardnumber|card\\[number\\])\\b[\\s\\S]{0,400}?\\b(?:btoa|atob|escape)\\s*\\([\\s\\S]{0,400}?(?:new\\s+Image\\s*\\(|navigator\\.sendBeacon|XMLHttpRequest))"
+  },
+  {
+   "id": "HTML.SEO.Spam",
+   "name": "Hidden SEO spam links",
+   "severity": "medium",
+   "types": [
+    "php",
+    "phtml",
+    "php5",
+    "php7",
+    "phar",
+    "inc",
+    "pht",
+    "phps",
+    "js",
+    "html",
+    "htm",
+    "svg"
+   ],
+   "pattern": "<div[^>]+style\\s*=\\s*['\\\"][^'\\\"]*(?:display\\s*:\\s*none|left\\s*:\\s*-\\d{3,}px|position\\s*:\\s*absolute;\\s*top\\s*:\\s*-\\d{3,}px)[^'\\\"]*['\\\"][^>]*>\\s*(?:<a\\s[^>]*href[^>]*>[^<]*(?:viagra|cialis|casino|payday|replica|porn|escort)[^<]*</a>\\s*){2,}"
+  }
+ ]
+}

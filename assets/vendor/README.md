@@ -1,0 +1,1 @@
+`qrcode.js` is [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 2.0.4 by Kazuhiko Arase, MIT licensed, vendored unmodified so that 2FA QR codes are rendered locally in the browser and the TOTP secret never leaves the site.

@@ -1,0 +1,24 @@
+{
+    "name": "wordgate/wordgate",
+    "description": "Open-source WordPress security: firewall, malware scanner, login security and two-factor authentication.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6 || ^10.5 || ^11.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WordGate\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

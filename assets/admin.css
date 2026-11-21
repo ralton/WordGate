@@ -1,0 +1,75 @@
+/* WordGate admin. Uses WP admin colour variables where available. */
+.wordgate { --wg-good: #00a32a; --wg-warn: #dba617; --wg-bad: #d63638; --wg-muted: #646970; --wg-border: #dcdcde; --wg-card: #fff; }
+.wordgate-title { display: flex; align-items: center; gap: 8px; }
+.wordgate-title .dashicons { font-size: 28px; width: 28px; height: 28px; color: var(--wp-admin-theme-color, #2271b1); }
+.wordgate-sep { color: var(--wg-muted); font-weight: 400; }
+.wordgate-tabs { margin-bottom: 16px; }
+
+.wg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.wg-card { background: var(--wg-card); border: 1px solid var(--wg-border); border-top: 4px solid var(--wg-border); border-radius: 6px; padding: 16px 20px; }
+.wg-card.wg-good { border-top-color: var(--wg-good); }
+.wg-card.wg-warn { border-top-color: var(--wg-warn); }
+.wg-card.wg-bad { border-top-color: var(--wg-bad); }
+.wg-card h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--wg-muted); }
+.wg-card p { margin: 4px 0; }
+.wg-big { font-size: 24px; font-weight: 600; line-height: 1.2; }
+.wg-big small { font-size: 13px; font-weight: 400; color: var(--wg-muted); }
+
+.wg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.wg-panel { background: var(--wg-card); border: 1px solid var(--wg-border); border-radius: 6px; padding: 4px 20px 16px; margin-bottom: 16px; }
+.wg-panel h2 { font-size: 15px; }
+.wg-panel .form-table th { width: 240px; }
+.wg-right { text-align: right; }
+.wg-empty { color: var(--wg-muted); font-style: italic; }
+.wg-muted td { opacity: .55; }
+.wg-ok { color: var(--wg-good); }
+.wg-warn-text { color: #996800; }
+.wg-bad-text { color: var(--wg-bad); }
+.wg-ok .dashicons, .wg-warn-text .dashicons, .wg-bad-text .dashicons { vertical-align: text-bottom; }
+.wg-inline-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+.wg-code { background: #f6f7f7; border: 1px solid var(--wg-border); padding: 8px 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.wg-tag { font-size: 11px; color: var(--wg-muted); border: 1px solid var(--wg-border); border-radius: 3px; padding: 0 4px; font-style: normal; margin-left: 4px; }
+
+.wg-sev { display: inline-block; min-width: 58px; text-align: center; font-size: 11px; font-weight: 600; text-transform: uppercase; border-radius: 3px; padding: 2px 6px; color: #fff; background: var(--wg-muted); }
+.wg-sev-critical { background: #8a1f11; }
+.wg-sev-high { background: var(--wg-bad); }
+.wg-sev-medium { background: var(--wg-warn); color: #1d2327; }
+.wg-sev-low { background: #72aee6; color: #1d2327; }
+
+.wg-bars { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-top: 8px; }
+.wg-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+.wg-bar span { display: block; background: var(--wp-admin-theme-color, #2271b1); border-radius: 3px 3px 0 0; min-height: 2px; }
+.wg-bar em { font-style: normal; font-size: 10px; color: var(--wg-muted); text-align: center; margin-top: 4px; }
+
+.wg-scan-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+.wg-scan-head > div:first-child { flex: 1 1 400px; }
+#wg-scan-progress { flex-basis: 100%; }
+.wg-progress { height: 10px; background: #f0f0f1; border-radius: 5px; overflow: hidden; }
+.wg-progress span { display: block; height: 100%; background: var(--wp-admin-theme-color, #2271b1); transition: width .4s ease; }
+
+.wg-issues { display: flex; flex-direction: column; gap: 6px; }
+.wg-issue { background: var(--wg-card); border: 1px solid var(--wg-border); border-left: 4px solid var(--wg-muted); border-radius: 4px; }
+.wg-issue-critical, .wg-issue-high { border-left-color: var(--wg-bad); }
+.wg-issue-medium { border-left-color: var(--wg-warn); }
+.wg-issue summary { display: flex; gap: 12px; align-items: center; padding: 10px 14px; cursor: pointer; list-style: none; }
+.wg-issue summary::-webkit-details-marker { display: none; }
+.wg-issue-title { flex: 1; font-weight: 500; word-break: break-word; }
+.wg-issue-when { color: var(--wg-muted); font-size: 12px; white-space: nowrap; }
+.wg-issue-body { padding: 0 14px 12px 84px; }
+.wg-issue-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.button.wg-danger { color: var(--wg-bad); border-color: var(--wg-bad); }
+.wg-empty-state { text-align: center; padding: 32px; }
+.wg-empty-state .dashicons { font-size: 48px; width: 48px; height: 48px; color: var(--wg-good); }
+
+.wg-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.wg-count { color: var(--wg-muted); margin-left: auto; }
+.wg-log td { vertical-align: top; }
+.wg-uri { word-break: break-all; font-size: 12px; }
+.wg-type { display: inline-block; padding: 1px 8px; border-radius: 10px; background: #f0f0f1; font-size: 12px; white-space: nowrap; }
+.wg-type-waf_block, .wg-type-ip_blocked, .wg-type-lockout { background: #fcf0f1; color: #8a2424; }
+.wg-type-login_failed, .wg-type-2fa_failed, .wg-type-rate_limit { background: #fcf9e8; color: #6e5300; }
+
+@media (max-width: 782px) {
+	.wg-issue-body { padding-left: 14px; }
+	.wg-panel .form-table th { width: auto; }
+}

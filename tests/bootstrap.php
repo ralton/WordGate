@@ -1,0 +1,30 @@
+<?php
+/**
+ * PHPUnit bootstrap. Unit tests cover the WordPress-independent parts of
+ * WordGate (WAF engine, TOTP, signatures) and run without WordPress.
+ */
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$wordgateTestDir = sys_get_temp_dir() . '/wordgate-tests-' . getmypid();
+if ( ! is_dir( $wordgateTestDir ) ) {
+	mkdir( $wordgateTestDir, 0777, true );
+}
+define( 'WORDGATE_DATA_DIR', $wordgateTestDir );
+define( 'WORDGATE_TEST_DATA_DIR', $wordgateTestDir );
+
+foreach ( array( 'IpUtil', 'Request', 'Transforms', 'Rule', 'Storage', 'Response', 'Engine' ) as $class ) {
+	require_once __DIR__ . '/../waf/src/' . $class . '.php';
+}
+require_once __DIR__ . '/../includes/Login/Totp.php';
+require_once __DIR__ . '/../includes/Scanner/Signatures.php';
+
+register_shutdown_function(
+	static function () use ( $wordgateTestDir ) {
+		$it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $wordgateTestDir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
+		foreach ( $it as $f ) {
+			$f->isDir() ? rmdir( $f->getPathname() ) : unlink( $f->getPathname() );
+		}
+		rmdir( $wordgateTestDir );
+	}
+);
