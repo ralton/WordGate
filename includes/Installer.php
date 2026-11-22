@@ -56,7 +56,7 @@ final class Installer {
 		);
 		$role = get_role( self::AUDITOR_ROLE );
 		if ( ! $role ) {
-			add_role( self::AUDITOR_ROLE, __( 'WordGate Auditor', 'wordgate' ), $caps );
+			add_role( self::AUDITOR_ROLE, 'WordGate Auditor', $caps ); // Not translated here: too early (plugins_loaded); WordPress translates role names on display.
 			return;
 		}
 		foreach ( $caps as $cap => $grant ) {
