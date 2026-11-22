@@ -12,7 +12,10 @@ use WordGate\Firewall\WafInstaller;
 
 final class Installer {
 
-	const DB_VERSION = '1';
+	const DB_VERSION = '2';
+
+	/** Read-only role for remote diagnostics via application passwords. */
+	const AUDITOR_ROLE = 'wordgate_auditor';
 
 	public static function activate() {
 		self::upgrade();
@@ -38,6 +41,26 @@ final class Installer {
 		}
 		if ( ! wp_next_scheduled( 'wordgate_daily' ) ) {
 			wp_schedule_event( time() + 600, 'daily', 'wordgate_daily' );
+		}
+	}
+
+	/**
+	 * "WordGate Auditor": can read WordGate data through the REST API and start
+	 * a scan. Nothing else — no settings, content, users or plugins.
+	 */
+	public static function addRoles() {
+		$caps = array(
+			'read'                => true,
+			Api\RestController::CAP_VIEW => true,
+			Api\RestController::CAP_SCAN => true,
+		);
+		$role = get_role( self::AUDITOR_ROLE );
+		if ( ! $role ) {
+			add_role( self::AUDITOR_ROLE, __( 'WordGate Auditor', 'wordgate' ), $caps );
+			return;
+		}
+		foreach ( $caps as $cap => $grant ) {
+			$role->add_cap( $cap, $grant );
 		}
 	}
 
@@ -85,6 +108,8 @@ final class Installer {
 				KEY status (status)
 			) {$charset};"
 		);
+
+		self::addRoles();
 
 		update_option( 'wordgate_db_version', self::DB_VERSION, true );
 		self::scheduleCron();

@@ -24,6 +24,7 @@ foreach ( array( 'wordgate_settings', 'wordgate_db_version', 'wordgate_auth_secr
 foreach ( array( 'wordgate_2fa', 'wordgate_2fa_pending', 'wordgate_2fa_grace_start' ) as $wordgate_meta ) {
 	delete_metadata( 'user', 0, $wordgate_meta, '', true );
 }
+remove_role( 'wordgate_auditor' );
 
 $wordgate_dir = defined( 'WORDGATE_DATA_DIR' ) ? WORDGATE_DATA_DIR : WP_CONTENT_DIR . '/wordgate';
 if ( is_dir( $wordgate_dir ) ) {

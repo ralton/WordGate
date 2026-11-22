@@ -109,6 +109,7 @@ final class EventLog {
 				'type'     => '',
 				'ip'       => '',
 				'search'   => '',
+				'since'    => 0,
 				'per_page' => 50,
 				'page'     => 1,
 			)
@@ -122,6 +123,10 @@ final class EventLog {
 		if ( '' !== $args['ip'] ) {
 			$where[] = 'ip = %s';
 			$vals[]  = $args['ip'];
+		}
+		if ( (int) $args['since'] > 0 ) {
+			$where[] = 'created >= %d';
+			$vals[]  = (int) $args['since'];
 		}
 		if ( '' !== $args['search'] ) {
 			$like    = '%' . $wpdb->esc_like( $args['search'] ) . '%';

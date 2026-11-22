@@ -4,7 +4,7 @@ Tags: security, firewall, malware scanner, two-factor authentication, brute forc
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,11 @@ Create an empty file named `disable-waf` in `wp-content/wordgate/`, or run `wp w
 Set "Client IP comes from" to CF-Connecting-IP and add Cloudflare's IP ranges to "Trusted proxy IPs".
 
 == Changelog ==
+
+= 0.1.1 =
+* New: read-only REST API (wordgate/v1) for remote diagnostics.
+* New: "WordGate Auditor" role for use with application passwords.
+* Activity log can be filtered by time (since).
 
 = 0.1.0 =
 * First release.

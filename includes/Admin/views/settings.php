@@ -77,3 +77,18 @@ Admin::formStart( 'settings' );
 </div>
 <?php
 Admin::formEnd();
+?>
+
+<div class="wg-panel" id="wg-remote-api">
+	<h2><?php esc_html_e( 'Remote diagnostics (read-only API)', 'wordgate' ); ?></h2>
+	<p><?php esc_html_e( 'Let a developer or support person read WordGate\'s status, activity log, scan results and blocks — without giving them an administrator account.', 'wordgate' ); ?></p>
+	<ol>
+		<li><?php echo wp_kses_post( sprintf( __( 'Create a user (or edit one) with the role <strong>WordGate Auditor</strong>. It can read WordGate data and start a scan, but cannot change settings, content, users or plugins. <a href="%s">Add user →</a>', 'wordgate' ), esc_url( admin_url( 'user-new.php' ) ) ) ); ?></li>
+		<li><?php esc_html_e( 'On that user\'s profile, under "Application Passwords", create a password and share it securely.', 'wordgate' ); ?></li>
+		<li><?php esc_html_e( 'Revoke the application password (or delete the user) when you are done.', 'wordgate' ); ?></li>
+	</ol>
+	<p><?php esc_html_e( 'Endpoint:', 'wordgate' ); ?> <code><?php echo esc_html( rest_url( 'wordgate/v1/status' ) ); ?></code></p>
+	<?php if ( function_exists( 'wp_is_application_passwords_available' ) && ! wp_is_application_passwords_available() ) : ?>
+		<p class="wg-warn-text"><?php esc_html_e( 'Application passwords are not available on this site (they require HTTPS, or may be disabled by another plugin).', 'wordgate' ); ?></p>
+	<?php endif; ?>
+</div>
