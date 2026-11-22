@@ -3,7 +3,7 @@
  * Plugin Name:       WordGate Security
  * Plugin URI:        https://github.com/ralton/wordgate
  * Description:       Open-source WordPress security: web application firewall, malware & integrity scanner, brute-force protection and two-factor authentication.
- * Version:           0.1.1
+ * Version:           0.1.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            WordGate contributors
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WORDGATE_VERSION', '0.1.1' );
+define( 'WORDGATE_VERSION', '0.1.2' );
 define( 'WORDGATE_FILE', __FILE__ );
 define( 'WORDGATE_DIR', __DIR__ );
 define( 'WORDGATE_URL', plugin_dir_url( __FILE__ ) );

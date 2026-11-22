@@ -73,3 +73,7 @@
 	.wg-issue-body { padding-left: 14px; }
 	.wg-panel .form-table th { width: auto; }
 }
+.wg-vulns { margin: 4px 0 12px; }
+.wg-vulns td { vertical-align: top; }
+.wg-vulns td:first-child { white-space: nowrap; }
+.wg-vulns small { color: var(--wg-muted); }

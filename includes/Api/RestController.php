@@ -174,7 +174,17 @@ final class RestController {
 						'template' => $theme->get_template(),
 					),
 					'plugins'             => $plugins,
+					'mu_plugins'          => array_values(
+						array_map(
+							static function ( $p ) {
+								return $p['Name'] . ( $p['Version'] ? ' ' . $p['Version'] : '' );
+							},
+							get_mu_plugins()
+						)
+					),
+					'dropins'             => array_keys( get_dropins() ),
 				),
+				'updates'      => self::updateDiagnostics(),
 				'settings'     => self::publicSettings( $settings ),
 				'scan'         => array(
 					'state'  => ScanRunner::publicState( ScanRunner::state() ),
@@ -217,6 +227,7 @@ final class RestController {
 		$rows = array_map(
 			static function ( $i ) {
 				$i['file'] = '' !== $i['file'] ? ScanRunner::rel( $i['file'] ) : '';
+				$i['data'] = (object) $i['data']; // Always a JSON object, never [].
 				unset( $i['hash'] );
 				return $i;
 			},
@@ -294,6 +305,44 @@ final class RestController {
 			'trusted_proxies'    => Settings::lines( 'trusted_proxies' ),
 			'forwarding_headers' => $present,
 		);
+	}
+
+	/**
+	 * What WordPress currently knows about available updates (issue #35).
+	 */
+	private static function updateDiagnostics() {
+		$out = array();
+		foreach ( array( 'core' => 'update_core', 'plugins' => 'update_plugins', 'themes' => 'update_themes' ) as $k => $transient ) {
+			$t = get_site_transient( $transient );
+			if ( ! is_object( $t ) ) {
+				$out[ $k ] = array( 'present' => false );
+				continue;
+			}
+			$row = array(
+				'present'      => true,
+				'last_checked' => isset( $t->last_checked ) ? (int) $t->last_checked : 0,
+			);
+			if ( 'core' === $k ) {
+				$row['offer'] = isset( $t->updates[0]->response ) ? $t->updates[0]->response . ' ' . $t->updates[0]->current : '';
+			} else {
+				$row['updates_available'] = array();
+				foreach ( isset( $t->response ) ? (array) $t->response : array() as $key => $info ) {
+					$info                       = (array) $info;
+					$row['updates_available'][] = $key . ' → ' . ( isset( $info['new_version'] ) ? $info['new_version'] : '?' );
+				}
+				$row['up_to_date_count'] = isset( $t->no_update ) ? count( (array) $t->no_update ) : 0;
+				if ( isset( $t->translations ) ) {
+					$row['translations'] = count( (array) $t->translations );
+				}
+			}
+			$out[ $k ] = $row;
+		}
+		$out['auto_updater_disabled'] = defined( 'AUTOMATIC_UPDATER_DISABLED' ) && AUTOMATIC_UPDATER_DISABLED;
+		$out['filters']               = array(
+			'pre_site_transient_update_plugins' => has_filter( 'pre_site_transient_update_plugins' ) ? true : false,
+			'site_transient_update_plugins'     => has_filter( 'site_transient_update_plugins' ) ? true : false,
+		);
+		return $out;
 	}
 
 	/**

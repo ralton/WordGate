@@ -26,10 +26,58 @@ final class BruteForce {
 			add_filter( 'authenticate', array( __CLASS__, 'rejectIfLocked' ), 1, 3 );
 			add_action( 'wp_login_failed', array( __CLASS__, 'onFailure' ), 10, 2 );
 			add_action( 'wp_login', array( __CLASS__, 'onSuccess' ), 10, 2 );
+			// Application passwords (REST API / XML-RPC basic auth) are validated by
+			// wp_authenticate_application_password(), outside the authenticate filter
+			// chain, so they need their own hooks.
+			add_action( 'wp_authenticate_application_password_errors', array( __CLASS__, 'rejectAppPasswordIfLocked' ), 10, 4 );
+			add_action( 'application_password_failed_authentication', array( __CLASS__, 'onAppPasswordFailure' ) );
 		}
 		if ( Settings::get( 'generic_login_errors' ) ) {
 			add_filter( 'authenticate', array( __CLASS__, 'genericErrors' ), 99, 3 );
+			add_filter( 'rest_authentication_errors', array( __CLASS__, 'genericRestErrors' ), 95 );
 		}
+	}
+
+	/**
+	 * Refuse application-password logins from locked-out IPs, even with the right password.
+	 *
+	 * @param \WP_Error $error
+	 */
+	public static function rejectAppPasswordIfLocked( $error, $user = null, $item = null, $password = '' ) {
+		$ip = Plugin::clientIp();
+		if ( self::isAllowlisted( $ip ) ) {
+			return;
+		}
+		$block = Plugin::storage()->findBlock( $ip, true );
+		if ( $block ) {
+			$error->add( 'wordgate_locked_out', self::lockedMessage( $block ), array( 'status' => 403 ) );
+		}
+	}
+
+	/**
+	 * Count failed application-password logins toward the per-IP lockout.
+	 *
+	 * @param \WP_Error $error
+	 */
+	public static function onAppPasswordFailure( $error ) {
+		if ( is_wp_error( $error ) && in_array( 'wordgate_locked_out', $error->get_error_codes(), true ) ) {
+			return; // Already locked out; don't extend or double-log.
+		}
+		$username = isset( $_SERVER['PHP_AUTH_USER'] ) ? sanitize_user( wp_unslash( $_SERVER['PHP_AUTH_USER'] ) ) : '';
+		self::onFailure( $username, $error );
+	}
+
+	/**
+	 * The REST API reports "invalid_username" vs "incorrect_password" for
+	 * application passwords, which reveals whether an account exists.
+	 *
+	 * @param \WP_Error|null|true $result
+	 */
+	public static function genericRestErrors( $result ) {
+		if ( is_wp_error( $result ) && array_intersect( $result->get_error_codes(), array( 'invalid_username', 'invalid_email', 'incorrect_password' ) ) ) {
+			return new \WP_Error( 'wordgate_invalid_credentials', __( 'Invalid username or application password.', 'wordgate' ), array( 'status' => 401 ) );
+		}
+		return $result;
 	}
 
 	private static function isAllowlisted( $ip ) {
@@ -121,7 +169,7 @@ final class BruteForce {
 		}
 	}
 
-	private static function lockedMessage( $block ) {
+	public static function lockedMessage( $block ) {
 		$minutes = $block && ! empty( $block['expires'] ) ? max( 1, (int) ceil( ( $block['expires'] - time() ) / 60 ) ) : 0;
 		return $minutes
 			/* translators: %d: minutes until the lockout ends */

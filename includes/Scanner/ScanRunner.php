@@ -270,7 +270,22 @@ final class ScanRunner {
 		foreach ( (array) glob( ABSPATH . '*.php' ) as $path ) {
 			$rel = basename( $path );
 			if ( ! isset( $checksums[ $rel ] ) && ! in_array( $rel, $root_ok, true ) ) {
-				self::issue( 'root_unknown', 'medium', sprintf( __( 'Unknown PHP file in site root: %s', 'wordgate' ), $rel ), __( 'This PHP file is not part of WordPress. It may belong to another application on your hosting account — or it may be malicious.', 'wordgate' ), $path, array( 'repair' => 'delete' ) );
+				// Low on its own: hosts and other apps often put files here. If the file
+				// also matches a malware signature, the files phase reports that separately.
+				self::issue(
+					'root_unknown',
+					'low',
+					/* translators: %s: file name */
+					sprintf( __( 'Unknown PHP file in site root: %s', 'wordgate' ), $rel ),
+					__( 'This PHP file is not part of WordPress. Hosting companies and other applications sometimes place files here, so it may be harmless — but attackers also drop backdoors in the site root. If you do not recognise it, open it and check, or ask your host. Its fingerprint (SHA-256) lets you compare it with the same file on your other sites.', 'wordgate' ),
+					$path,
+					array(
+						'repair' => 'delete',
+						'size'   => (int) filesize( $path ),
+						'mtime'  => (int) filemtime( $path ),
+						'sha256' => (string) hash_file( 'sha256', $path ),
+					)
+				);
 			}
 		}
 		return true;
@@ -336,7 +351,11 @@ final class ScanRunner {
 		if ( ! function_exists( 'get_plugins' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		$items = array();
+		if ( 0 === (int) self::$state['cursor'] ) {
+			self::refreshUpdateData();
+		}
+		$latest = self::latestVersions();
+		$items  = array();
 		foreach ( get_plugins() as $file => $p ) {
 			$slug = dirname( $file );
 			if ( '.' !== $slug ) {
@@ -356,24 +375,42 @@ final class ScanRunner {
 			if ( ! $data ) {
 				continue;
 			}
-			foreach ( Vulnerabilities::affecting( $data, $version ) as $v ) {
+			$summary = Vulnerabilities::summarize( $data, $version, isset( $latest[ $kind ][ $slug ] ) ? $latest[ $kind ][ $slug ] : '' );
+			if ( $summary ) {
+				$n = $summary['count'];
+				if ( 1 === $n ) {
+					/* translators: 1: plugin/theme name, 2: version, 3: vulnerability title */
+					$title = sprintf( __( '%1$s %2$s has a known vulnerability: %3$s', 'wordgate' ), $name, $version, $summary['items'][0]['title'] );
+				} else {
+					/* translators: 1: plugin/theme name, 2: version, 3: count */
+					$title = sprintf( __( '%1$s %2$s has %3$d known vulnerabilities', 'wordgate' ), $name, $version, $n );
+				}
+				if ( $summary['fixed_in'] ) {
+					/* translators: %s: version */
+					$advice = sprintf( __( 'Update to version %s or later.', 'wordgate' ), $summary['fixed_in'] );
+					if ( $summary['unfixed'] ) {
+						$advice .= ' ' . __( 'Some of these have no fix yet; consider replacing this component.', 'wordgate' );
+					}
+				} else {
+					$advice = __( 'No fixed version is available. Consider removing it and finding an alternative.', 'wordgate' );
+				}
+				if ( ! $active ) {
+					$advice .= ' ' . __( 'It is inactive, but its files can still be attacked directly — delete it if you do not use it.', 'wordgate' );
+				}
 				self::issue(
 					'vulnerable_' . $kind,
-					$v['severity'],
-					/* translators: 1: plugin/theme name, 2: version, 3: vulnerability title */
-					sprintf( __( '%1$s %2$s is vulnerable: %3$s', 'wordgate' ), $name, $version, $v['title'] ),
-					$v['fixed_in']
-						/* translators: %s: version */
-						? sprintf( __( 'Update to version %s or later.', 'wordgate' ), $v['fixed_in'] ) . ( $active ? '' : ' ' . __( 'The component is inactive, but its files can still be attacked directly — delete it if unused.', 'wordgate' ) )
-						: __( 'No fixed version is available. Consider removing it and finding an alternative.', 'wordgate' ),
+					$summary['severity'],
+					$title,
+					$advice,
 					'',
 					array(
-						'kind'       => $kind,
-						'slug'       => $slug,
-						'references' => $v['references'],
-						'fixed_in'   => $v['fixed_in'],
+						'kind'            => $kind,
+						'slug'            => $slug,
+						'version'         => $version,
+						'fixed_in'        => $summary['fixed_in'],
+						'vulnerabilities' => $summary['items'],
 					),
-					$kind . ':' . $slug . ':' . $v['id']
+					$kind . ':' . $slug
 				);
 			}
 			if ( 'plugin' === $kind && ! empty( $data['closed'] ) ) {
@@ -489,6 +526,19 @@ final class ScanRunner {
 	private static function phaseChecks( $deadline ) {
 		global $wp_version;
 
+		$freshness = self::refreshUpdateData();
+		if ( ! $freshness['ok'] ) {
+			self::issue(
+				'update_check_failed',
+				'medium',
+				__( 'WordPress cannot check for plugin and theme updates', 'wordgate' ),
+				__( 'Update information is missing or more than two days old, so outdated components may go unreported. Your host may be blocking connections to api.wordpress.org, or WP-Cron may not be running. Visit Dashboard → Updates and click "Check again"; if that fails, contact your host.', 'wordgate' ),
+				'',
+				$freshness,
+				'update_check_failed'
+			);
+		}
+
 		$core = get_site_transient( 'update_core' );
 		if ( isset( $core->updates[0]->response ) && 'upgrade' === $core->updates[0]->response ) {
 			self::issue( 'core_update', 'high', sprintf( __( 'WordPress %1$s is available (you have %2$s)', 'wordgate' ), $core->updates[0]->current, $wp_version ), __( 'Core updates frequently include security fixes. Update from Dashboard → Updates.', 'wordgate' ), '', array(), 'core_update' );
@@ -600,6 +650,74 @@ final class ScanRunner {
 				self::$state['stats']['new_issue_titles'][] = $title;
 			}
 		}
+	}
+
+	/**
+	 * Make sure WordPress's update data is reasonably fresh before we rely on it.
+	 * The scanner used to read the transients as-is and silently reported nothing
+	 * when they were missing or stale (issue #35).
+	 *
+	 * @return array{ok:bool,plugins_checked:int,themes_checked:int}
+	 */
+	public static function refreshUpdateData() {
+		$stale = static function ( $t ) {
+			return ! is_object( $t ) || empty( $t->last_checked ) || time() - (int) $t->last_checked > 12 * HOUR_IN_SECONDS;
+		};
+		if ( ! function_exists( 'wp_update_plugins' ) ) {
+			require_once ABSPATH . WPINC . '/update.php';
+		}
+		if ( $stale( get_site_transient( 'update_plugins' ) ) ) {
+			wp_update_plugins();
+		}
+		if ( $stale( get_site_transient( 'update_themes' ) ) ) {
+			wp_update_themes();
+		}
+		$p   = get_site_transient( 'update_plugins' );
+		$t   = get_site_transient( 'update_themes' );
+		$pc  = is_object( $p ) && ! empty( $p->last_checked ) ? (int) $p->last_checked : 0;
+		$tc  = is_object( $t ) && ! empty( $t->last_checked ) ? (int) $t->last_checked : 0;
+		$max = 2 * DAY_IN_SECONDS;
+		return array(
+			'ok'              => $pc > time() - $max && $tc > time() - $max,
+			'plugins_checked' => $pc,
+			'themes_checked'  => $tc,
+		);
+	}
+
+	/**
+	 * Latest published version of each wordpress.org plugin/theme, from WordPress's
+	 * own update data ("response" = update available, "no_update" = already latest).
+	 *
+	 * @return array{plugin:array<string,string>,theme:array<string,string>}
+	 */
+	public static function latestVersions() {
+		$out = array(
+			'plugin' => array(),
+			'theme'  => array(),
+		);
+		$p = get_site_transient( 'update_plugins' );
+		foreach ( array( 'no_update', 'response' ) as $bucket ) {
+			if ( is_object( $p ) && ! empty( $p->$bucket ) ) {
+				foreach ( (array) $p->$bucket as $file => $info ) {
+					$info = (object) $info;
+					if ( ! empty( $info->new_version ) ) {
+						$out['plugin'][ dirname( $file ) ] = (string) $info->new_version;
+					}
+				}
+			}
+		}
+		$t = get_site_transient( 'update_themes' );
+		foreach ( array( 'no_update', 'response' ) as $bucket ) {
+			if ( is_object( $t ) && ! empty( $t->$bucket ) ) {
+				foreach ( (array) $t->$bucket as $slug => $info ) {
+					$info = (array) $info;
+					if ( ! empty( $info['new_version'] ) ) {
+						$out['theme'][ $slug ] = (string) $info['new_version'];
+					}
+				}
+			}
+		}
+		return $out;
 	}
 
 	private static function note( $text ) {

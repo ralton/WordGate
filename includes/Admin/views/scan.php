@@ -79,6 +79,9 @@ $wg_running = ScanRunner::isRunning();
 						— <?php echo esc_html( size_format( filesize( $wg_issue['file'] ) ) ); ?>, <?php echo esc_html( sprintf( __( 'modified %s', 'wordgate' ), Admin::timeAgo( filemtime( $wg_issue['file'] ) ) ) ); ?>
 					<?php endif; ?></p>
 				<?php endif; ?>
+				<?php if ( ! empty( $wg_data['sha256'] ) ) : ?>
+					<p><strong><?php esc_html_e( 'SHA-256:', 'wordgate' ); ?></strong> <code><?php echo esc_html( $wg_data['sha256'] ); ?></code></p>
+				<?php endif; ?>
 				<?php if ( ! empty( $wg_data['matched'] ) ) : ?>
 					<p><strong><?php esc_html_e( 'Matched code:', 'wordgate' ); ?></strong></p><pre class="wg-code"><?php echo esc_html( $wg_data['matched'] ); ?></pre>
 				<?php endif; ?>
@@ -87,6 +90,25 @@ $wg_running = ScanRunner::isRunning();
 					<?php foreach ( $wg_data['references'] as $wg_ref ) : ?>
 						<a href="<?php echo esc_url( $wg_ref['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $wg_ref['id'] && strlen( $wg_ref['id'] ) < 24 ? $wg_ref['id'] : wp_parse_url( $wg_ref['url'], PHP_URL_HOST ) ); ?></a>
 					<?php endforeach; ?></p>
+				<?php endif; ?>
+				<?php if ( ! empty( $wg_data['vulnerabilities'] ) ) : ?>
+					<table class="widefat striped wg-vulns">
+						<thead><tr><th><?php esc_html_e( 'Severity', 'wordgate' ); ?></th><th><?php esc_html_e( 'Vulnerability', 'wordgate' ); ?></th><th><?php esc_html_e( 'Fixed in', 'wordgate' ); ?></th><th><?php esc_html_e( 'References', 'wordgate' ); ?></th></tr></thead>
+						<tbody>
+						<?php foreach ( $wg_data['vulnerabilities'] as $wg_v ) : ?>
+							<tr>
+								<td><?php echo Admin::severityBadge( $wg_v['severity'] ); // phpcs:ignore ?><?php echo empty( $wg_v['rated'] ) ? ' <small title="' . esc_attr__( 'No CVSS score published', 'wordgate' ) . '">' . esc_html__( 'unrated', 'wordgate' ) . '</small>' : ''; ?></td>
+								<td><?php echo esc_html( $wg_v['title'] ); ?></td>
+								<td><?php echo $wg_v['fixed_in'] ? esc_html( $wg_v['fixed_in'] ) : esc_html__( 'No fix', 'wordgate' ); ?></td>
+								<td>
+									<?php foreach ( (array) $wg_v['references'] as $wg_ref ) : ?>
+										<a href="<?php echo esc_url( $wg_ref['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $wg_ref['id'] && strlen( $wg_ref['id'] ) < 24 ? $wg_ref['id'] : wp_parse_url( $wg_ref['url'], PHP_URL_HOST ) ); ?></a>
+									<?php endforeach; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
 				<?php endif; ?>
 				<p class="wg-issue-actions">
 					<?php if ( 'open' === $wg_issue['status'] ) : ?>

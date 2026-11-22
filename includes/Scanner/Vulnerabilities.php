@@ -13,6 +13,13 @@ final class Vulnerabilities {
 
 	const API = 'https://www.wpvulnerability.net/';
 
+	const SEVERITY_ORDER = array(
+		'critical' => 4,
+		'high'     => 3,
+		'medium'   => 2,
+		'low'      => 1,
+	);
+
 	/**
 	 * @param string $kind plugin | theme.
 	 * @return array|null The API "data" object.
@@ -34,14 +41,69 @@ final class Vulnerabilities {
 	}
 
 	/**
+	 * One summary per component, so a plugin with 16 CVEs is one issue, not 16.
+	 *
+	 * @param string $latest Latest published version, if known.
+	 * @return array|null null when the installed version is not affected. Otherwise:
+	 *   count, severity (highest), fixed_in (recommended target), unfixed (bool),
+	 *   items (each: id, title, severity, rated, fixed_in, references), sorted most severe first.
+	 */
+	public static function summarize( array $data, $version, $latest = '' ) {
+		$items = self::affecting( $data, $version );
+		if ( ! $items ) {
+			return null;
+		}
+		usort(
+			$items,
+			static function ( $a, $b ) {
+				$d = self::SEVERITY_ORDER[ $b['severity'] ] - self::SEVERITY_ORDER[ $a['severity'] ];
+				return 0 !== $d ? $d : strcmp( $a['title'], $b['title'] );
+			}
+		);
+		$severity = $items[0]['severity'];
+		$fixes    = array_values( array_filter( array_column( $items, 'fixed_in' ) ) );
+		$unfixed  = count( $fixes ) < count( $items );
+
+		return array(
+			'count'    => count( $items ),
+			'severity' => $severity,
+			'fixed_in' => self::recommendedVersion( (string) $version, $fixes, (string) $latest ),
+			'unfixed'  => $unfixed,
+			'items'    => $items,
+		);
+	}
+
+	/**
+	 * The version to tell people to update to: the highest fix version, unless
+	 * that version does not exist for this product. WPVulnerability sometimes
+	 * records only the premium edition's fix (e.g. UpdraftPlus Premium 2.26.16.26
+	 * while the free plugin was fixed in 1.26.16); in that case the latest version
+	 * actually published is the right answer.
+	 *
+	 * @param string[] $fixes
+	 * @param string   $latest Latest published version, if known (e.g. from wordpress.org).
+	 */
+	public static function recommendedVersion( $installed, array $fixes, $latest = '' ) {
+		if ( ! $fixes ) {
+			return '';
+		}
+		usort( $fixes, 'version_compare' );
+		$highest = (string) end( $fixes );
+		if ( '' !== (string) $latest && version_compare( $highest, $latest, '>' ) && version_compare( $latest, $installed, '>' ) ) {
+			return (string) $latest;
+		}
+		return $highest;
+	}
+
+	/**
 	 * Vulnerabilities that affect a specific installed version.
 	 *
-	 * @return array[] id, title, severity, fixed_in, references
+	 * @return array[] id, title, severity, rated, fixed_in, references
 	 */
 	public static function affecting( array $data, $version ) {
 		$out = array();
 		foreach ( isset( $data['vulnerability'] ) ? (array) $data['vulnerability'] : array() as $v ) {
-			$op = isset( $v['operator'] ) ? $v['operator'] : array();
+			$op = isset( $v['operator'] ) ? (array) $v['operator'] : array();
 			if ( ! self::versionMatches( $version, $op ) ) {
 				continue;
 			}
@@ -49,19 +111,28 @@ final class Vulnerabilities {
 			foreach ( isset( $v['source'] ) ? (array) $v['source'] : array() as $s ) {
 				if ( ! empty( $s['link'] ) ) {
 					$refs[] = array(
-						'id'   => isset( $s['id'] ) ? $s['id'] : '',
-						'name' => isset( $s['name'] ) ? wp_strip_all_tags( html_entity_decode( $s['name'] ) ) : '',
-						'url'  => esc_url_raw( $s['link'] ),
+						'id'          => isset( $s['id'] ) ? (string) $s['id'] : '',
+						'name'        => isset( $s['name'] ) ? self::clean( $s['name'], true ) : '',
+						'description' => isset( $s['description'] ) ? self::clean( $s['description'], false, true ) : '',
+						'url'         => esc_url_raw( $s['link'] ),
 					);
 				}
 			}
-			$fixed = ( ! empty( $op['max_version'] ) && isset( $op['max_operator'] ) && 'lt' === $op['max_operator'] && empty( $op['unfixed'] ) ) ? $op['max_version'] : '';
+			$fixed = ( ! empty( $op['max_version'] ) && isset( $op['max_operator'] ) && 'lt' === $op['max_operator'] && empty( $op['unfixed'] ) ) ? (string) $op['max_version'] : '';
+			list( $severity, $rated ) = self::severity( $v );
 			$out[] = array(
-				'id'         => isset( $v['uuid'] ) ? $v['uuid'] : md5( wp_json_encode( $v ) ),
+				'id'         => isset( $v['uuid'] ) ? (string) $v['uuid'] : md5( (string) wp_json_encode( $v ) ),
 				'title'      => self::title( $v, $refs ),
-				'severity'   => self::severity( $v ),
+				'severity'   => $severity,
+				'rated'      => $rated,
 				'fixed_in'   => $fixed,
-				'references' => array_slice( $refs, 0, 5 ),
+				'references' => array_map(
+					static function ( $r ) {
+						unset( $r['description'] );
+						return $r;
+					},
+					array_slice( $refs, 0, 5 )
+				),
 			);
 		}
 		return $out;
@@ -86,31 +157,95 @@ final class Vulnerabilities {
 		return ! empty( $op['min_version'] ) || ! empty( $op['max_version'] ) || ! empty( $op['unfixed'] );
 	}
 
-	private static function title( array $v, array $refs ) {
-		// Prefer a descriptive source title ("... - Arbitrary File Upload") over the bare "Name < x.y" form.
+	/**
+	 * Best human-readable title, in order of preference:
+	 *   1. A source title of the form "Product <= 1.2 - Stored XSS" (text after the LAST " - ").
+	 *   2. "…is vulnerable to <thing>" extracted from a description.
+	 *   3. The start of a description.
+	 *   4. A CVE id.
+	 *   5. The database's own name (e.g. "Divi [Divi] < 4.27.7").
+	 */
+	public static function title( array $v, array $refs ) {
 		foreach ( $refs as $r ) {
-			if ( false !== strpos( $r['name'], ' - ' ) ) {
-				return substr( $r['name'], strpos( $r['name'], ' - ' ) + 3 );
+			$pos = strrpos( $r['name'], ' - ' );
+			if ( false !== $pos ) {
+				$t = trim( substr( $r['name'], $pos + 3 ) );
+				if ( strlen( $t ) >= 8 && ! preg_match( '/^[\d.\s<>=-]+$/', $t ) ) {
+					return self::truncate( $t );
+				}
 			}
 		}
-		return isset( $v['name'] ) ? wp_strip_all_tags( $v['name'] ) : __( 'Known vulnerability', 'wordgate' );
+		$vulnerableTo = '/\bvulnerable to (?:an? )?([^\n]{6,140}?)(?: in (?:all )?versions?\b| via\b| due to\b| because\b|[.,;]|\n|$)/i';
+		foreach ( array( 'name', 'description' ) as $field ) {
+			foreach ( $refs as $r ) {
+				if ( preg_match( $vulnerableTo, $r[ $field ], $m ) ) {
+					return self::truncate( ucfirst( trim( $m[1] ) ) );
+				}
+			}
+		}
+		foreach ( $refs as $r ) {
+			if ( '' !== $r['description'] ) {
+				return self::truncate( strtok( $r['description'], "\n" ) );
+			}
+		}
+		foreach ( $refs as $r ) {
+			if ( 0 === strpos( $r['id'], 'CVE-' ) ) {
+				return $r['id'];
+			}
+		}
+		return isset( $v['name'] ) ? self::clean( $v['name'] ) : 'Known vulnerability';
 	}
 
+	/**
+	 * @return array{0:string,1:bool} severity, and whether it came from a real rating.
+	 */
 	private static function severity( array $v ) {
-		$impact = isset( $v['impact'] ) ? $v['impact'] : array();
+		$impact = isset( $v['impact'] ) ? (array) $v['impact'] : array();
 		if ( ! empty( $impact['ssvc']['kev'] ) ) {
-			return 'critical'; // Listed in CISA's Known Exploited Vulnerabilities catalog.
+			return array( 'critical', true ); // Listed in CISA's Known Exploited Vulnerabilities catalog.
 		}
-		$score = isset( $impact['cvss']['score'] ) ? (float) $impact['cvss']['score'] : null;
-		if ( null !== $score ) {
+		if ( isset( $impact['cvss']['score'] ) && is_numeric( $impact['cvss']['score'] ) ) {
+			$score = (float) $impact['cvss']['score'];
 			if ( $score >= 9 ) {
-				return 'critical';
+				return array( 'critical', true );
 			}
 			if ( $score >= 7 ) {
-				return 'high';
+				return array( 'high', true );
 			}
-			return $score >= 4 ? 'medium' : 'low';
+			return array( $score >= 4 ? 'medium' : 'low', true );
 		}
-		return 'high';
+		return array( 'medium', false ); // Unrated: don't cry wolf.
+	}
+
+	/**
+	 * Decode entities ("&#8211;", "&amp;"), strip tags and "[en]" language prefixes.
+	 * Block-level tags become line breaks so "<p>A</p><p>B</p>" can't fuse into "AB";
+	 * with $firstLine only the first non-empty line is kept (for titles).
+	 */
+	public static function clean( $text, $firstLine = false, $keepLines = false ) {
+		$text = (string) preg_replace( '#<\s*(?:br\s*/?|/\s*(?:p|div|li|h[1-6]|tr|ul|ol|blockquote)\s*)>#i', "\n", (string) $text );
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$text = wp_strip_all_tags( $text );
+		$text = preg_replace( '/^\s*\[[a-z]{2}\]\s*/', '', $text );
+		$lines = array_values( array_filter( array_map( 'trim', preg_split( '/\R/u', (string) $text ) ), 'strlen' ) );
+		if ( ! $lines ) {
+			return '';
+		}
+		if ( $firstLine ) {
+			return trim( (string) preg_replace( '/\s+/u', ' ', $lines[0] ) );
+		}
+		if ( $keepLines ) {
+			return implode( "\n", array_map( static function ( $l ) { return trim( (string) preg_replace( '/[^\S\n]+/u', ' ', $l ) ); }, $lines ) );
+		}
+		return trim( (string) preg_replace( '/\s+/u', ' ', implode( ' ', $lines ) ) );
+	}
+
+	private static function truncate( $text, $max = 110 ) {
+		if ( function_exists( 'mb_strlen' ) ? mb_strlen( $text ) <= $max : strlen( $text ) <= $max ) {
+			return $text;
+		}
+		$cut = function_exists( 'mb_substr' ) ? mb_substr( $text, 0, $max - 1 ) : substr( $text, 0, $max - 1 );
+		return rtrim( $cut ) . '…';
 	}
 }
+
