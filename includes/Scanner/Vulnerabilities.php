@@ -45,11 +45,28 @@ final class Vulnerabilities {
 	 *
 	 * @param string $latest Latest published version, if known.
 	 * @return array|null null when the installed version is not affected. Otherwise:
-	 *   count, severity (highest), fixed_in (recommended target), unfixed (bool),
-	 *   items (each: id, title, severity, rated, fixed_in, references), sorted most severe first.
+	 *   count, severity (highest), fixed_in (recommended target, may be ''), newer_than
+	 *   (set when the only guidance is "a release newer than X"), unfixed (bool: some have no
+	 *   fix at all), items (each: id, title, severity, rated, fixed_in, fixed_after, unfixed,
+	 *   references), sorted most severe first.
 	 */
 	public static function summarize( array $data, $version, $latest = '' ) {
 		$items = self::affecting( $data, $version );
+
+		// Records whose only fix is a version that doesn't exist for this product,
+		// while the site already runs the newest published version, describe a
+		// different edition (e.g. UpdraftPlus Premium 2.26.16.26 vs free 1.26.16).
+		// They can't be acted on and the free edition is not affected: drop them.
+		if ( '' !== (string) $latest && version_compare( (string) $version, (string) $latest, '>=' ) ) {
+			$items = array_values(
+				array_filter(
+					$items,
+					static function ( $i ) use ( $latest ) {
+						return '' === $i['fixed_in'] || ! version_compare( $i['fixed_in'], (string) $latest, '>' );
+					}
+				)
+			);
+		}
 		if ( ! $items ) {
 			return null;
 		}
@@ -62,13 +79,31 @@ final class Vulnerabilities {
 		);
 		$severity = $items[0]['severity'];
 		$fixes    = array_values( array_filter( array_column( $items, 'fixed_in' ) ) );
-		$unfixed  = count( $fixes ) < count( $items );
+		$unfixed  = in_array( true, array_column( $items, 'unfixed' ), true );
+		$target   = self::recommendedVersion( (string) $version, $fixes, (string) $latest );
+
+		// "<= X" records only tell us the fix is newer than X.
+		$after = array_values( array_filter( array_column( $items, 'fixed_after' ) ) );
+		$newer_than = '';
+		if ( $after ) {
+			usort( $after, 'version_compare' );
+			$highest_after = (string) end( $after );
+			if ( '' === $target || version_compare( $target, $highest_after, '<=' ) ) {
+				if ( '' !== (string) $latest && version_compare( (string) $latest, $highest_after, '>' ) ) {
+					$target = (string) $latest;
+				} else {
+					$target     = '';
+					$newer_than = $highest_after;
+				}
+			}
+		}
 
 		return array(
 			'count'    => count( $items ),
 			'severity' => $severity,
-			'fixed_in' => self::recommendedVersion( (string) $version, $fixes, (string) $latest ),
-			'unfixed'  => $unfixed,
+			'fixed_in'   => $target,
+			'newer_than' => $newer_than,
+			'unfixed'    => $unfixed,
 			'items'    => $items,
 		);
 	}
@@ -118,15 +153,21 @@ final class Vulnerabilities {
 					);
 				}
 			}
-			$fixed = ( ! empty( $op['max_version'] ) && isset( $op['max_operator'] ) && 'lt' === $op['max_operator'] && empty( $op['unfixed'] ) ) ? (string) $op['max_version'] : '';
+			$is_unfixed = ! empty( $op['unfixed'] );
+			$max_op     = isset( $op['max_operator'] ) ? $op['max_operator'] : 'lt';
+			// "< X": fixed in X. "<= X": fixed in some release after X (exact version not recorded).
+			$fixed       = ( ! $is_unfixed && ! empty( $op['max_version'] ) && 'lt' === $max_op ) ? (string) $op['max_version'] : '';
+			$fixed_after = ( ! $is_unfixed && ! empty( $op['max_version'] ) && 'le' === $max_op ) ? (string) $op['max_version'] : '';
 			list( $severity, $rated ) = self::severity( $v );
 			$out[] = array(
 				'id'         => isset( $v['uuid'] ) ? (string) $v['uuid'] : md5( (string) wp_json_encode( $v ) ),
 				'title'      => self::title( $v, $refs ),
 				'severity'   => $severity,
 				'rated'      => $rated,
-				'fixed_in'   => $fixed,
-				'references' => array_map(
+				'fixed_in'    => $fixed,
+				'fixed_after' => $fixed_after,
+				'unfixed'     => $is_unfixed,
+				'references'  => array_map(
 					static function ( $r ) {
 						unset( $r['description'] );
 						return $r;

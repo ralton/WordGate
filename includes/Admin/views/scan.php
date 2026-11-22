@@ -99,7 +99,18 @@ $wg_running = ScanRunner::isRunning();
 							<tr>
 								<td><?php echo Admin::severityBadge( $wg_v['severity'] ); // phpcs:ignore ?><?php echo empty( $wg_v['rated'] ) ? ' <small title="' . esc_attr__( 'No CVSS score published', 'wordgate' ) . '">' . esc_html__( 'unrated', 'wordgate' ) . '</small>' : ''; ?></td>
 								<td><?php echo esc_html( $wg_v['title'] ); ?></td>
-								<td><?php echo $wg_v['fixed_in'] ? esc_html( $wg_v['fixed_in'] ) : esc_html__( 'No fix', 'wordgate' ); ?></td>
+								<td>
+									<?php
+									if ( $wg_v['fixed_in'] ) {
+										echo esc_html( $wg_v['fixed_in'] );
+									} elseif ( ! empty( $wg_v['fixed_after'] ) ) {
+										/* translators: %s: version */
+										echo esc_html( sprintf( __( 'after %s', 'wordgate' ), $wg_v['fixed_after'] ) );
+									} else {
+										esc_html_e( 'No fix', 'wordgate' );
+									}
+									?>
+								</td>
 								<td>
 									<?php foreach ( (array) $wg_v['references'] as $wg_ref ) : ?>
 										<a href="<?php echo esc_url( $wg_ref['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $wg_ref['id'] && strlen( $wg_ref['id'] ) < 24 ? $wg_ref['id'] : wp_parse_url( $wg_ref['url'], PHP_URL_HOST ) ); ?></a>

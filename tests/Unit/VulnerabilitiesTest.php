@@ -22,6 +22,37 @@ final class VulnerabilitiesTest extends TestCase {
 		$this->assertGreaterThan( 1, $s['count'] );
 	}
 
+	/**
+	 * Live QA, 25clams.com: UpdraftPlus updated to 1.26.16 (latest free) was still
+	 * flagged with 6 records whose only fix is Premium 2.26.16.26.
+	 */
+	public function testUpToDateFreeEditionNotFlaggedForPremiumRecords() {
+		$this->assertNull( Vulnerabilities::summarize( $this->fixture( 'plugin-updraftplus' ), '1.26.16', '1.26.16' ) );
+		// Without knowing the latest version we can't tell, so it stays reported.
+		$this->assertNotNull( Vulnerabilities::summarize( $this->fixture( 'plugin-updraftplus' ), '1.26.16' ) );
+		// Unfixed vulnerabilities are never dropped.
+		$unfixed = array( 'vulnerability' => array( array( 'uuid' => 'u', 'name' => 'X', 'operator' => array( 'unfixed' => '1' ), 'source' => array() ) ) );
+		$this->assertNotNull( Vulnerabilities::summarize( $unfixed, '1.0', '1.0' ) );
+	}
+
+	/**
+	 * Live QA: Divi 3.0.103 said "some have no fix yet" because a "<= 4.5.2" record
+	 * (fixed in a later release) was treated as unfixed.
+	 */
+	public function testLessOrEqualRangeIsFixedNotUnfixed() {
+		$s = Vulnerabilities::summarize( $this->fixture( 'theme-Divi' ), '3.0.103' );
+		$this->assertFalse( $s['unfixed'] );
+		$this->assertSame( '4.27.7', $s['fixed_in'] );
+		$le = array_values( array_filter( $s['items'], static function ( $i ) { return '' !== $i['fixed_after']; } ) );
+		$this->assertNotEmpty( $le );
+		$this->assertSame( '4.5.2', $le[0]['fixed_after'] );
+
+		// Only a "<= X" record: advise "newer than X", or the latest release if known.
+		$only = array( 'vulnerability' => array( array( 'uuid' => 'a', 'name' => 'Y', 'operator' => array( 'max_version' => '2.0', 'max_operator' => 'le' ), 'source' => array() ) ) );
+		$this->assertSame( array( '', '2.0' ), array_values( array_intersect_key( Vulnerabilities::summarize( $only, '1.0' ), array_flip( array( 'fixed_in', 'newer_than' ) ) ) ) );
+		$this->assertSame( '2.1', Vulnerabilities::summarize( $only, '1.0', '2.1' )['fixed_in'] );
+	}
+
 	public function testRecommendedVersion() {
 		$this->assertSame( '1.26.18', Vulnerabilities::recommendedVersion( '1.26.13', array( '2.26.16.26', '1.26.16' ), '1.26.18' ), 'Fix version that does not exist for this product: use latest published' );
 		$this->assertSame( '4.27.7', Vulnerabilities::recommendedVersion( '3.0.103', array( '4.0.10', '4.27.7', '3.17.3' ) ), 'Sequential fixes: must fix all, not just the same-major one' );

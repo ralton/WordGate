@@ -388,11 +388,14 @@ final class ScanRunner {
 				if ( $summary['fixed_in'] ) {
 					/* translators: %s: version */
 					$advice = sprintf( __( 'Update to version %s or later.', 'wordgate' ), $summary['fixed_in'] );
-					if ( $summary['unfixed'] ) {
-						$advice .= ' ' . __( 'Some of these have no fix yet; consider replacing this component.', 'wordgate' );
-					}
+				} elseif ( $summary['newer_than'] ) {
+					/* translators: %s: version */
+					$advice = sprintf( __( 'Update to the latest version (newer than %s).', 'wordgate' ), $summary['newer_than'] );
 				} else {
 					$advice = __( 'No fixed version is available. Consider removing it and finding an alternative.', 'wordgate' );
+				}
+				if ( $summary['unfixed'] && ( $summary['fixed_in'] || $summary['newer_than'] ) ) {
+					$advice .= ' ' . __( 'Some of these have no fix yet; consider replacing this component.', 'wordgate' );
 				}
 				if ( ! $active ) {
 					$advice .= ' ' . __( 'It is inactive, but its files can still be attacked directly — delete it if you do not use it.', 'wordgate' );

@@ -4,7 +4,7 @@ Tags: security, firewall, malware scanner, two-factor authentication, brute forc
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,10 @@ Create an empty file named `disable-waf` in `wp-content/wordgate/`, or run `wp w
 Set "Client IP comes from" to CF-Connecting-IP and add Cloudflare's IP ranges to "Trusted proxy IPs".
 
 == Changelog ==
+
+= 0.1.3 =
+* Scanner: an up-to-date free plugin is no longer flagged for vulnerability records that only have a premium-edition fix (e.g. UpdraftPlus 1.26.16).
+* Scanner: vulnerabilities recorded as affecting "up to and including" a version are treated as fixed in a later release, not as unfixed.
 
 = 0.1.2 =
 * Security: application-password (REST API / XML-RPC) logins now count toward brute-force lockouts, are refused from locked-out IPs, and no longer reveal whether a username exists.
