@@ -105,6 +105,24 @@
    "action": "block"
   },
   {
+   "id": 1006,
+   "name": "SQL injection: syntax anomaly (SQL tokenizer)",
+   "category": "sqli",
+   "severity": "high",
+   "type": "sqli",
+   "targets": [
+    "query",
+    "body",
+    "cookies"
+   ],
+   "transforms": [
+    "urldecode",
+    "remove_nulls"
+   ],
+   "pattern": "",
+   "action": "block"
+  },
+  {
    "id": 2001,
    "name": "XSS: script tag",
    "category": "xss",

@@ -13,7 +13,7 @@ if ( ! is_dir( $wordgateTestDir ) ) {
 define( 'WORDGATE_DATA_DIR', $wordgateTestDir );
 define( 'WORDGATE_TEST_DATA_DIR', $wordgateTestDir );
 
-foreach ( array( 'IpUtil', 'Request', 'Transforms', 'Rule', 'Storage', 'Response', 'Engine' ) as $class ) {
+foreach ( array( 'IpUtil', 'Request', 'Transforms', 'SqliTokenizer', 'Rule', 'Storage', 'Response', 'Engine' ) as $class ) {
 	require_once __DIR__ . '/../waf/src/' . $class . '.php';
 }
 require_once __DIR__ . '/../includes/Login/Totp.php';

@@ -28,6 +28,9 @@ rules = [
   dict(id=1005, name="SQL injection: error-based", category="sqli", severity="high",
        targets=PARAMS, transforms=SQL,
        pattern=r"(?:\b(?:extractvalue|updatexml)\s*\(|\bexp\s*\(\s*~\s*\(|\bgtid_subset\s*\(|\bjson_keys\s*\(\s*\(\s*select|\bpolygon\s*\(\s*\(\s*select|\bfloor\s*\(\s*rand\s*\(\s*\d*\s*\)\s*\*\s*2\s*\))"),
+  dict(id=1006, name="SQL injection: syntax anomaly (SQL tokenizer)", category="sqli", severity="high",
+       type="sqli", targets=PARAMS, transforms=["urldecode", "remove_nulls"],
+       pattern=""),
 
   # ---------------------------------------------------------------- XSS
   dict(id=2001, name="XSS: script tag", category="xss", severity="high",
