@@ -170,7 +170,7 @@ final class Command {
 	 * ## OPTIONS
 	 *
 	 * <action>
-	 * : status | enable | learning | disable | install | install-extended | uninstall-extended | sync
+	 * : status | enable | learning | disable | install | install-extended | uninstall-extended | uploads-enable | uploads-disable | uploads-test | sync
 	 *
 	 * [--server=<server>]
 	 * : For install-extended: apache-mod_php, litespeed, user-ini or manual. Auto-detected otherwise.
@@ -207,6 +207,27 @@ final class Command {
 				WafInstaller::uninstallExtended();
 				$r = true;
 				break;
+			case 'uploads-enable':
+				$r = WafInstaller::enableUploadsPhpProtection();
+				if ( true === $r ) {
+					Settings::update( array( 'disable_uploads_php' => true ) );
+				}
+				break;
+			case 'uploads-disable':
+				WafInstaller::disableUploadsPhpProtection();
+				Settings::update( array( 'disable_uploads_php' => false ) );
+				$r = true;
+				break;
+			case 'uploads-test':
+				$test = WafInstaller::testUploadsPhpExecution();
+				if ( 'blocked_by_server' === $test['status'] ) {
+					WP_CLI::success( $test['message'] );
+				} elseif ( 'executed' === $test['status'] || 'error' === $test['status'] ) {
+					WP_CLI::error( $test['message'] );
+				} else {
+					WP_CLI::warning( $test['message'] );
+				}
+				return;
 			case 'sync':
 				$r = WafConfig::sync() ? true : new \WP_Error( 'sync', 'Could not write config.' );
 				break;

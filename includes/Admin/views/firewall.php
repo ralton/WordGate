@@ -71,6 +71,28 @@ $wg_servers  = array(
 </div>
 
 <div class="wg-panel">
+	<h2><?php esc_html_e( 'Disable PHP execution in uploads', 'wordgate' ); ?></h2>
+	<?php $wg_uploads_protected = WafInstaller::isUploadsPhpDisabled(); ?>
+	<?php if ( $wg_uploads_protected ) : ?>
+		<p class="wg-ok"><span class="dashicons dashicons-yes-alt"></span> <strong><?php esc_html_e( 'Uploads .htaccess rule is installed.', 'wordgate' ); ?></strong> <?php esc_html_e( 'Apache / LiteSpeed will deny direct requests to PHP files inside wp-content/uploads/ before PHP runs.', 'wordgate' ); ?></p>
+		<p>
+			<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'waf', array( 'op' => 'uploads_test' ) ) ); ?>"><?php esc_html_e( 'Test PHP execution now', 'wordgate' ); ?></a>
+			<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'waf', array( 'op' => 'uploads_disable' ) ) ); ?>"><?php esc_html_e( 'Remove .htaccess rule', 'wordgate' ); ?></a>
+		</p>
+	<?php else : ?>
+		<p><?php esc_html_e( 'Uploaded PHP backdoors are the most common persistence method. Blocking PHP execution in wp-content/uploads/ at the web server adds defence in depth alongside WAF rule 6003.', 'wordgate' ); ?></p>
+		<p>
+			<a class="button button-primary" href="<?php echo esc_url( Admin::actionUrl( 'waf', array( 'op' => 'uploads_enable' ) ) ); ?>"><?php esc_html_e( 'Disable PHP execution in uploads', 'wordgate' ); ?></a>
+			<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'waf', array( 'op' => 'uploads_test' ) ) ); ?>"><?php esc_html_e( 'Test PHP execution now', 'wordgate' ); ?></a>
+		</p>
+	<?php endif; ?>
+	<details><summary><?php esc_html_e( 'Nginx configuration (manual setup)', 'wordgate' ); ?></summary>
+		<p><?php esc_html_e( 'Nginx ignores .htaccess files. Add this location block to your server {} config, then click "Test PHP execution now" above to verify:', 'wordgate' ); ?></p>
+		<pre class="wg-code"><?php echo esc_html( WafInstaller::uploadsNginxSnippet() ); ?></pre>
+	</details>
+</div>
+
+<div class="wg-panel">
 	<h2><?php esc_html_e( 'Firewall options', 'wordgate' ); ?></h2>
 	<?php Admin::formStart( 'firewall' ); ?>
 	<table class="form-table" role="presentation">

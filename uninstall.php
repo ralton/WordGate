@@ -33,6 +33,18 @@ if ( file_exists( $wordgate_stub ) && ( '' === $wordgate_prepend || realpath( $w
 }
 wp_clear_scheduled_hook( 'wordgate_delete_waf_stub' );
 
+$wordgate_uploads = wp_get_upload_dir();
+if ( ! empty( $wordgate_uploads['basedir'] ) ) {
+	$wordgate_uht = rtrim( (string) $wordgate_uploads['basedir'], '/\\' ) . '/.htaccess';
+	if ( file_exists( $wordgate_uht ) ) {
+		$wordgate_c = (string) file_get_contents( $wordgate_uht ); // phpcs:ignore
+		$wordgate_n = (string) preg_replace( "/# BEGIN WordGate Uploads Protection\n.*?# END WordGate Uploads Protection\n?/s", '', $wordgate_c );
+		if ( $wordgate_n !== $wordgate_c ) {
+			@file_put_contents( $wordgate_uht, $wordgate_n ); // phpcs:ignore
+		}
+	}
+}
+
 $wordgate_dir = defined( 'WORDGATE_DATA_DIR' ) ? WORDGATE_DATA_DIR : WP_CONTENT_DIR . '/wordgate';
 if ( is_dir( $wordgate_dir ) ) {
 	$wordgate_it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $wordgate_dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );

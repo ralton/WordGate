@@ -35,6 +35,7 @@ final class Settings {
 			'bf_max_failures'            => 5,
 			'bf_window_minutes'          => 15,
 			'bf_lockout_minutes'         => 60,
+			'bf_max_password_resets'     => 5,
 			'bf_invalid_username_lockout' => false,
 			'bf_banned_usernames'        => "admin\nadministrator\nroot",
 			'generic_login_errors'       => true,
@@ -47,6 +48,7 @@ final class Settings {
 			'restrict_rest_users'        => true,
 			'hide_wp_version'            => true,
 			'disable_file_editor'        => false,
+			'disable_uploads_php'        => false,
 			'security_headers'           => false,
 
 			// Scanner.

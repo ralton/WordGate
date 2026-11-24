@@ -25,9 +25,10 @@ $wg_types  = array(
 	'ip_blocked'   => __( 'Blocked IP requests', 'wordgate' ),
 	'rate_limit'   => __( 'Rate limited', 'wordgate' ),
 	'waf_learning' => __( 'Learning mode matches', 'wordgate' ),
-	'login_failed' => __( 'Failed logins', 'wordgate' ),
-	'lockout'      => __( 'Lockouts', 'wordgate' ),
-	'2fa_failed'   => __( '2FA failures', 'wordgate' ),
+	'login_failed'           => __( 'Failed logins', 'wordgate' ),
+	'lockout'                => __( 'Lockouts', 'wordgate' ),
+	'lostpassword_throttled' => __( 'Password resets throttled', 'wordgate' ),
+	'2fa_failed'             => __( '2FA failures', 'wordgate' ),
 	'2fa_success'  => __( '2FA logins', 'wordgate' ),
 	'scan_finished' => __( 'Scans', 'wordgate' ),
 );
