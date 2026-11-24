@@ -431,7 +431,7 @@ final class Storage {
 
 		$rules = array();
 		foreach ( $defs as $def ) {
-			if ( isset( $def['id'], $def['name'], $def['pattern'] ) ) {
+			if ( isset( $def['id'], $def['name'] ) && ( isset( $def['pattern'] ) || ( isset( $def['type'] ) && 'sqli' === $def['type'] ) ) ) {
 				$rules[] = new Rule( $def );
 			}
 		}

@@ -206,7 +206,13 @@ final class EngineTest extends TestCase {
 	}
 
 	public function testDisabledRule() {
+		// Disabling regex rule 1003 alone still falls through to SQL tokenizer rule 1006.
 		$d = $this->engine( array( 'disabled_rules' => array( 1003 ) ) )->inspect( $this->get( array( 'id' => '1 and sleep(5)' ) ) );
+		$this->assertSame( Engine::BLOCK, $d['action'] );
+		$this->assertSame( 1006, $d['rule']->id );
+
+		// Disabling both allows the request.
+		$d = $this->engine( array( 'disabled_rules' => array( 1003, 1006 ) ) )->inspect( $this->get( array( 'id' => '1 and sleep(5)' ) ) );
 		$this->assertSame( Engine::ALLOW, $d['action'] );
 	}
 

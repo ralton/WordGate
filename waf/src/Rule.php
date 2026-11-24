@@ -30,6 +30,7 @@ final class Rule {
 	public $category;
 	public $severity;
 	public $action;
+	public $type;
 	public $targets;
 	public $transforms;
 	public $pattern;
@@ -47,14 +48,15 @@ final class Rule {
 		$this->category      = isset( $def['category'] ) ? (string) $def['category'] : 'generic';
 		$this->severity      = isset( $def['severity'] ) ? (string) $def['severity'] : 'medium';
 		$this->action        = isset( $def['action'] ) && 'log' === $def['action'] ? 'log' : 'block';
+		$this->type          = isset( $def['type'] ) && 'sqli' === $def['type'] ? 'sqli' : 'regex';
 		$this->targets       = isset( $def['targets'] ) ? (array) $def['targets'] : array( 'query', 'body', 'cookies' );
 		$this->transforms    = isset( $def['transforms'] ) ? (array) $def['transforms'] : array();
-		$this->pattern       = (string) $def['pattern'];
+		$this->pattern       = isset( $def['pattern'] ) ? (string) $def['pattern'] : '';
 		$this->paths         = isset( $def['paths'] ) ? (array) $def['paths'] : array();
 		$this->methods       = isset( $def['methods'] ) ? array_map( 'strtoupper', (array) $def['methods'] ) : array();
 		$this->excludeParams = isset( $def['exclude_params'] ) ? (array) $def['exclude_params'] : array();
 		$this->adminBypass   = ! empty( $def['admin_bypass'] );
-		$this->regex         = self::compile( $this->pattern );
+		$this->regex         = 'regex' === $this->type ? self::compile( $this->pattern ) : '';
 	}
 
 	/**
@@ -67,9 +69,12 @@ final class Rule {
 	}
 
 	/**
-	 * Is the pattern a valid PCRE? Used by tests and the rule loader.
+	 * Is the pattern a valid PCRE (or valid non-regex matcher)? Used by tests and the rule loader.
 	 */
 	public function isValid() {
+		if ( 'sqli' === $this->type ) {
+			return true;
+		}
 		return false !== @preg_match( $this->regex, '' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 	}
 
@@ -111,6 +116,19 @@ final class Rule {
 					continue;
 				}
 				$subject = Transforms::apply( $value, $this->transforms );
+				if ( 'sqli' === $this->type ) {
+					$hit = SqliTokenizer::detect( $subject );
+					if ( null !== $hit ) {
+						return array(
+							'rule_id'     => $this->id,
+							'target'      => $target,
+							'param'       => (string) $param,
+							'matched'     => substr( $subject, 0, 200 ),
+							'fingerprint' => $hit['fingerprint'],
+						);
+					}
+					continue;
+				}
 				if ( preg_match( $this->regex, $subject, $m ) ) {
 					return array(
 						'rule_id' => $this->id,

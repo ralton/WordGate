@@ -35,4 +35,5 @@ jobs:
         run: |
           python3 tools/build-rules.py
           python3 tools/build-signatures.py
-          git diff --exit-code -- waf/rules/default.json includes/Scanner/signatures.json
+          python3 tools/build-sqli-fingerprints.py
+          git diff --exit-code -- waf/rules/default.json waf/src/SqliFingerprints.php includes/Scanner/signatures.json tests/fixtures/sqli/

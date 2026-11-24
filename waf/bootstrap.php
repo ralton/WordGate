@@ -32,6 +32,7 @@ if ( ( defined( 'WORDGATE_WAF_DISABLE' ) && WORDGATE_WAF_DISABLE ) || ! defined(
 require_once __DIR__ . '/src/IpUtil.php';
 require_once __DIR__ . '/src/Request.php';
 require_once __DIR__ . '/src/Transforms.php';
+require_once __DIR__ . '/src/SqliTokenizer.php';
 require_once __DIR__ . '/src/Rule.php';
 require_once __DIR__ . '/src/Storage.php';
 require_once __DIR__ . '/src/Response.php';

