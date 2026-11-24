@@ -53,8 +53,9 @@ final class Transforms {
 			case 'compress_whitespace':
 				return (string) preg_replace( '/[\s\x0b]+/', ' ', $v );
 			case 'remove_sql_comments':
-				// /* ... */, /*! mysql-specific */ and trailing -- / # comments.
-				$v = (string) preg_replace( '#/\*!?\d*(.*?)\*/#s', ' $1 ', $v );
+				// Unwrap MySQL conditional comments (/*!50000...*/), then strip standard /* ... */ comments.
+				$v = (string) preg_replace( '#/\*!\d*(.*?)\*/#s', ' $1 ', $v );
+				$v = (string) preg_replace( '#/\*.*?\*/#s', ' ', $v );
 				return $v;
 			case 'normalize_path':
 				$v = str_replace( '\\', '/', $v );

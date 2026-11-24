@@ -49,6 +49,17 @@ final class WafConfig {
 	}
 
 	/**
+	 * Rotate the signing secret and push it to the WAF config, immediately
+	 * invalidating all existing wordgate_admin bypass cookies.
+	 */
+	public static function rotateSecret() {
+		$secret = bin2hex( random_bytes( 32 ) );
+		update_option( 'wordgate_auth_secret', $secret, false );
+		self::sync();
+		return $secret;
+	}
+
+	/**
 	 * All rules currently loaded (for the admin UI).
 	 *
 	 * @return \WordGate\Waf\Rule[]
