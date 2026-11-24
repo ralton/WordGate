@@ -29,8 +29,12 @@ $wg_types  = array(
 	'lockout'                => __( 'Lockouts', 'wordgate' ),
 	'lostpassword_throttled' => __( 'Password resets throttled', 'wordgate' ),
 	'2fa_failed'             => __( '2FA failures', 'wordgate' ),
-	'2fa_success'  => __( '2FA logins', 'wordgate' ),
-	'scan_finished' => __( 'Scans', 'wordgate' ),
+	'2fa_success'            => __( '2FA logins', 'wordgate' ),
+	'admin_created'          => __( 'Administrator created', 'wordgate' ),
+	'settings_changed'       => __( 'Settings changed', 'wordgate' ),
+	'tamper_deactivated'     => __( 'Plugin deactivated', 'wordgate' ),
+	'tamper_waf_disabled'    => __( 'Firewall disabled', 'wordgate' ),
+	'scan_finished'          => __( 'Scans', 'wordgate' ),
 );
 $wg_pages = (int) ceil( $wg_result['total'] / 50 );
 ?>

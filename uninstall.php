@@ -18,7 +18,7 @@ global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wordgate_events" ); // phpcs:ignore
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wordgate_issues" ); // phpcs:ignore
 
-foreach ( array( 'wordgate_settings', 'wordgate_db_version', 'wordgate_auth_secret', 'wordgate_scan_state', 'wordgate_last_scan' ) as $wordgate_opt ) {
+foreach ( array( 'wordgate_settings', 'wordgate_db_version', 'wordgate_auth_secret', 'wordgate_scan_state', 'wordgate_last_scan', 'wordgate_expected_waf_mode', 'wordgate_admin_snapshot' ) as $wordgate_opt ) {
 	delete_option( $wordgate_opt );
 }
 foreach ( array( 'wordgate_2fa', 'wordgate_2fa_pending', 'wordgate_2fa_grace_start' ) as $wordgate_meta ) {

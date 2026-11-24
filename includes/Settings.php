@@ -60,6 +60,7 @@ final class Settings {
 			// Notifications.
 			'notify_email'               => '',
 			'notify_scan'                => true,
+			'notify_tamper'              => true,
 			'notify_admin_lockout'       => true,
 			'notify_admin_login'         => false,
 
@@ -96,10 +97,12 @@ final class Settings {
 	 * Merge, sanitise, persist and propagate to the WAF config file.
 	 */
 	public static function update( array $changes ) {
-		$all = array_merge( self::all(), self::sanitize( $changes ) );
+		$before = self::all();
+		$all    = array_merge( $before, self::sanitize( $changes ) );
 		update_option( self::OPTION, $all, true );
 		self::$cache = $all;
 		Firewall\WafConfig::sync();
+		TamperMonitor::onSettingsChanged( $before, $all );
 		return $all;
 	}
 

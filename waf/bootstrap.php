@@ -42,6 +42,7 @@ try {
 	$wordgate_config  = $wordgate_storage->readConfig();
 
 	if ( 'disabled' !== $wordgate_config['mode'] ) {
+		$wordgate_storage->touchHeartbeat();
 		$wordgate_engine = new \WordGate\Waf\Engine(
 			$wordgate_storage,
 			$wordgate_config,

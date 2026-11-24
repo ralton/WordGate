@@ -266,6 +266,47 @@ final class Storage {
 	}
 
 	/* ---------------------------------------------------------------------
+	 * WAF heartbeat (used by tamper alerts to detect silent WAF removal)
+	 * ------------------------------------------------------------------- */
+
+	/**
+	 * Record that the WAF ran, throttled to at most one write per $interval seconds.
+	 */
+	public function touchHeartbeat( $interval = 300, $now = null ) {
+		$now  = null === $now ? time() : (int) $now;
+		$file = $this->dir . '/.heartbeat';
+		if ( file_exists( $file ) ) {
+			$mtime = @filemtime( $file ); // phpcs:ignore
+			if ( false !== $mtime && $now - $mtime < $interval ) {
+				return false;
+			}
+		}
+		if ( ! is_dir( $this->dir ) ) {
+			return false;
+		}
+		return false !== @file_put_contents( $file, (string) $now, LOCK_EX ); // phpcs:ignore
+	}
+
+	/**
+	 * Seconds since the last WAF heartbeat, or null if no heartbeat exists yet.
+	 *
+	 * @return int|null
+	 */
+	public function heartbeatAge( $now = null ) {
+		$file = $this->dir . '/.heartbeat';
+		if ( ! file_exists( $file ) ) {
+			return null;
+		}
+		$now = null === $now ? time() : (int) $now;
+		$ts  = (int) trim( (string) @file_get_contents( $file ) ); // phpcs:ignore
+		if ( $ts <= 0 ) {
+			$mtime = @filemtime( $file ); // phpcs:ignore
+			$ts    = false !== $mtime ? (int) $mtime : 0;
+		}
+		return $ts > 0 ? max( 0, $now - $ts ) : null;
+	}
+
+	/* ---------------------------------------------------------------------
 	 * Attack log
 	 * ------------------------------------------------------------------- */
 

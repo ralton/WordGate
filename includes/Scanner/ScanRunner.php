@@ -623,6 +623,67 @@ final class ScanRunner {
 			}
 		}
 
+		// Suspicious administrator accounts & hidden-user hooks.
+		$stored_snap = get_option( AdminAudit::SNAPSHOT_OPTION, null );
+		$previous    = is_array( $stored_snap ) && isset( $stored_snap['admins'] ) && is_array( $stored_snap['admins'] ) ? $stored_snap['admins'] : null;
+		$snap_since  = is_array( $stored_snap ) && ! empty( $stored_snap['updated'] ) ? (int) $stored_snap['updated'] : 0;
+		$current_adm = AdminAudit::collectFromDatabase();
+		$visible_ids = array_map(
+			'intval',
+			get_users(
+				array(
+					'role'   => 'administrator',
+					'fields' => 'ID',
+				)
+			)
+		);
+		// Only compare against get_users() for users who actually hold the administrator role.
+		$role_admins = array_filter(
+			$current_adm,
+			static function ( $a ) {
+				return in_array( 'administrator', (array) $a['roles'], true );
+			}
+		);
+		$visible_for_check = array();
+		foreach ( $current_adm as $aid => $a ) {
+			if ( ! isset( $role_admins[ $aid ] ) || in_array( (int) $aid, $visible_ids, true ) ) {
+				$visible_for_check[] = (int) $aid;
+			}
+		}
+		$logged = null !== $previous ? AdminAudit::recentLoggedCreations( max( 0, $snap_since - HOUR_IN_SECONDS ) ) : array();
+		$audit  = AdminAudit::audit( $previous, $current_adm, $logged, $visible_for_check );
+		foreach ( $audit['findings'] as $f ) {
+			self::issue( $f['type'], $f['severity'], $f['title'], $f['description'], '', $f['data'], $f['subject'] );
+		}
+		foreach ( AdminAudit::inspectPreUserQueryHooks() as $hook ) {
+			self::issue(
+				'hidden_user_hook',
+				'high',
+				/* translators: %s: callback name */
+				sprintf( __( 'Active pre_user_query filter detected: %s', 'wordgate' ), $hook['name'] ),
+				__( 'A plugin or theme is hooking pre_user_query, which malware commonly uses to hide backdoor administrator accounts from the Users screen. Verify that this hook belongs to a legitimate plugin.', 'wordgate' ),
+				$hook['file'],
+				$hook,
+				'pre_user_query:' . $hook['name']
+			);
+		}
+		// Persist baseline (preserving untrusted new admins as open until trusted or removed).
+		$ignored_ids = array();
+		foreach ( Issues::all( 'ignored' ) as $ign ) {
+			if ( in_array( $ign['type'], array( 'suspicious_admin', 'admin_added' ), true ) && ! empty( $ign['data']['user_id'] ) ) {
+				$ignored_ids[] = (int) $ign['data']['user_id'];
+			}
+		}
+		$next_snap = AdminAudit::nextSnapshot( $previous, $current_adm, $ignored_ids );
+		update_option(
+			AdminAudit::SNAPSHOT_OPTION,
+			array(
+				'updated' => time(),
+				'admins'  => $next_snap,
+			),
+			false
+		);
+
 		// Verify WordGate's data directory and .user.ini are not publicly downloadable (e.g. Nginx without deny rules).
 		$data_real    = realpath( WORDGATE_DATA_DIR );
 		$content_real = realpath( WP_CONTENT_DIR );

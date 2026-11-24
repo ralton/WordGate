@@ -61,6 +61,9 @@ final class WafInstaller {
 		if ( false === @file_put_contents( self::muPluginPath(), $code ) ) { // phpcs:ignore
 			return new \WP_Error( 'wordgate_mu', __( 'Could not write the firewall loader to mu-plugins. Check file permissions.', 'wordgate' ) );
 		}
+		if ( 'extended' !== get_option( \WordGate\TamperMonitor::EXPECTED_WAF_OPTION ) ) {
+			\WordGate\TamperMonitor::setExpectedWafMode( 'basic' );
+		}
 		return true;
 	}
 
@@ -123,19 +126,30 @@ final class WafInstaller {
 					"\tphp_value auto_prepend_file '{$path}'",
 					'</IfModule>',
 				);
-				return self::writeBlock( ABSPATH . '.htaccess', $lines, '#' );
+				$result = self::writeBlock( ABSPATH . '.htaccess', $lines, '#' );
+				if ( true === $result ) {
+					\WordGate\TamperMonitor::setExpectedWafMode( 'extended' );
+				}
+				return $result;
 			case 'litespeed':
 				$lines = array(
 					'<IfModule LiteSpeed>',
 					"\tphp_value auto_prepend_file '{$path}'",
 					'</IfModule>',
 				);
-				return self::writeBlock( ABSPATH . '.htaccess', $lines, '#' );
+				$result = self::writeBlock( ABSPATH . '.htaccess', $lines, '#' );
+				if ( true === $result ) {
+					\WordGate\TamperMonitor::setExpectedWafMode( 'extended' );
+				}
+				return $result;
 			case 'user-ini':
 				$result = self::writeBlock( ABSPATH . '.user.ini', array( "auto_prepend_file = '{$path}'" ), ';' );
 				if ( true === $result && file_exists( ABSPATH . '.htaccess' ) ) {
 					// Keep .user.ini itself from being served.
 					self::writeBlock( ABSPATH . '.htaccess', array( '<Files ".user.ini">', "\t<IfModule mod_authz_core.c>", "\t\tRequire all denied", "\t</IfModule>", '</Files>' ), '#' );
+				}
+				if ( true === $result ) {
+					\WordGate\TamperMonitor::setExpectedWafMode( 'extended' );
 				}
 				return $result;
 		}
@@ -160,6 +174,7 @@ final class WafInstaller {
 
 		self::removeBlock( ABSPATH . '.htaccess', '#' );
 		self::removeBlock( ABSPATH . '.user.ini', ';' );
+		\WordGate\TamperMonitor::setExpectedWafMode( $deactivating ? '' : ( file_exists( self::muPluginPath() ) ? 'basic' : '' ) );
 
 		if ( file_exists( self::stubPath() ) ) {
 			if ( ! $activeUserIni ) {
