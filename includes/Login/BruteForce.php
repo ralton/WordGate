@@ -18,6 +18,7 @@ use WordGate\Notifications;
 use WordGate\Plugin;
 use WordGate\Settings;
 use WordGate\Waf\IpUtil;
+use WordGate\Waf\Storage;
 
 final class BruteForce {
 
@@ -36,6 +37,151 @@ final class BruteForce {
 			add_filter( 'authenticate', array( __CLASS__, 'genericErrors' ), 99, 3 );
 			add_filter( 'rest_authentication_errors', array( __CLASS__, 'genericRestErrors' ), 95 );
 		}
+		if ( (int) Settings::get( 'bf_max_password_resets' ) > 0 || Settings::get( 'generic_login_errors' ) ) {
+			add_action( 'lostpassword_post', array( __CLASS__, 'onLostPasswordPost' ), 10, 2 );
+		}
+	}
+
+	/**
+	 * Pure rate-limit evaluation for password reset requests (per IP and per target user).
+	 *
+	 * @return array{status:string,ip_count:int,user_count:int}
+	 */
+	public static function checkLostPasswordRate( Storage $storage, $ip, $user_id, $limit, $allowlisted = false, $window = 3600 ) {
+		$limit = (int) $limit;
+		if ( $limit <= 0 ) {
+			return array(
+				'status'     => 'allow',
+				'ip_count'   => 0,
+				'user_count' => 0,
+			);
+		}
+
+		$ip_count = 0;
+		if ( ! $allowlisted ) {
+			$ip_count = $storage->increment( 'lostpw_ip:' . $ip, $window );
+			if ( $ip_count > $limit ) {
+				return array(
+					'status'     => 'ip_limit',
+					'ip_count'   => $ip_count,
+					'user_count' => 0,
+				);
+			}
+		}
+
+		$user_count = 0;
+		$user_id    = (int) $user_id;
+		if ( $user_id > 0 ) {
+			$user_count = $storage->increment( 'lostpw_user:' . $user_id, $window );
+			if ( $user_count > $limit ) {
+				return array(
+					'status'     => 'user_limit',
+					'ip_count'   => $ip_count,
+					'user_count' => $user_count,
+				);
+			}
+		}
+
+		return array(
+			'status'     => 'allow',
+			'ip_count'   => $ip_count,
+			'user_count' => $user_count,
+		);
+	}
+
+	/**
+	 * Rate-limit wp-login.php?action=lostpassword per IP and per user, and mask
+	 * whether an account exists so reset requests cannot be used to probe emails.
+	 *
+	 * @param \WP_Error       $errors
+	 * @param \WP_User|false  $user_data
+	 */
+	public static function onLostPasswordPost( $errors, $user_data = false ) {
+		if ( ! ( $errors instanceof \WP_Error ) ) {
+			return;
+		}
+		if ( in_array( 'empty_username', $errors->get_error_codes(), true ) ) {
+			return;
+		}
+
+		$ip          = Plugin::clientIp();
+		$allowlisted = self::isAllowlisted( $ip );
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$raw_login   = isset( $_POST['user_login'] ) ? sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) : '';
+		$login       = $user_data instanceof \WP_User ? $user_data->user_login : $raw_login;
+
+		if ( ! $allowlisted ) {
+			$block = Plugin::storage()->findBlock( $ip, true );
+			if ( $block ) {
+				$errors->add( 'wordgate_locked_out', self::lockedMessage( $block ) );
+				return;
+			}
+		}
+
+		$limit = (int) Settings::get( 'bf_max_password_resets' );
+		if ( $limit > 0 ) {
+			$decision = self::checkLostPasswordRate(
+				Plugin::storage(),
+				$ip,
+				$user_data instanceof \WP_User ? $user_data->ID : 0,
+				$limit,
+				$allowlisted,
+				HOUR_IN_SECONDS
+			);
+			if ( 'ip_limit' === $decision['status'] ) {
+				/* translators: %d: number of password reset requests */
+				self::lockout( $ip, $login, sprintf( __( '%d password reset requests in an hour', 'wordgate' ), $decision['ip_count'] ) );
+				Plugin::storage()->resetCounter( 'lostpw_ip:' . $ip );
+				$errors->add( 'wordgate_locked_out', self::lockedMessage( Plugin::storage()->findBlock( $ip, true ) ) );
+				return;
+			}
+			if ( 'user_limit' === $decision['status'] ) {
+				EventLog::add(
+					'lostpassword_throttled',
+					$ip,
+					array(
+						'user_login' => $login,
+						'reason'     => sprintf( 'Exceeded %d password reset requests per hour for user', $limit ),
+					),
+					'medium'
+				);
+				if ( self::isWebLostPasswordForm() ) {
+					self::redirectLostPasswordGeneric();
+				}
+				$errors->add( 'wordgate_lostpassword_throttled', __( 'Too many password reset requests. Please try again later.', 'wordgate' ) );
+				return;
+			}
+		}
+
+		// Show the exact same confirmation screen for unknown accounts as for real ones.
+		$codes         = $errors->get_error_codes();
+		$unknown_codes = array( 'invalidcombo', 'invalid_email', 'invalid_username' );
+		if ( $codes && ! array_diff( $codes, $unknown_codes ) && self::isWebLostPasswordForm() ) {
+			EventLog::add(
+				'lostpassword_unknown',
+				$ip,
+				array(
+					'user_login' => $raw_login,
+					'reason'     => 'Password reset requested for unknown account',
+				),
+				'low'
+			);
+			self::redirectLostPasswordGeneric();
+		}
+	}
+
+	private static function isWebLostPasswordForm() {
+		// phpcs:ignore WordPress.Security.NonceVerification
+		return ! wp_doing_ajax() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) && isset( $_POST['user_login'] );
+	}
+
+	private static function redirectLostPasswordGeneric() {
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$redirect = ! empty( $_REQUEST['redirect_to'] )
+			? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) )
+			: add_query_arg( 'checkemail', 'confirm', wp_login_url() );
+		wp_safe_redirect( $redirect );
+		exit;
 	}
 
 	/**

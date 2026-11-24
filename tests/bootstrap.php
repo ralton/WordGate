@@ -17,6 +17,8 @@ foreach ( array( 'IpUtil', 'Request', 'Transforms', 'Rule', 'Storage', 'Response
 	require_once __DIR__ . '/../waf/src/' . $class . '.php';
 }
 require_once __DIR__ . '/../includes/Login/Totp.php';
+require_once __DIR__ . '/../includes/Login/BruteForce.php';
+require_once __DIR__ . '/../includes/Firewall/WafInstaller.php';
 require_once __DIR__ . '/../includes/Scanner/Signatures.php';
 require_once __DIR__ . '/../includes/Scanner/Vulnerabilities.php';
 
