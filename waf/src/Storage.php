@@ -279,32 +279,78 @@ final class Storage {
 	}
 
 	/**
-	 * Atomically take all pending log records.
+	 * Atomically take up to $max pending log records without discarding the rest.
+	 *
+	 * Any records beyond $max remain queued in a .processing file and are read
+	 * on the next drainLog() call.
 	 *
 	 * @return array[]
 	 */
 	public function drainLog( $max = 5000 ) {
-		$file = $this->dir . '/attack-log.jsonl';
-		if ( ! file_exists( $file ) || 0 === filesize( $file ) ) {
-			return array();
-		}
-		$tmp = $this->dir . '/attack-log.' . getmypid() . '.' . mt_rand() . '.processing';
-		if ( ! @rename( $file, $tmp ) ) { // phpcs:ignore
-			return array();
-		}
-		$records = array();
-		$fp      = fopen( $tmp, 'r' ); // phpcs:ignore
-		while ( $fp && false !== ( $line = fgets( $fp ) ) && count( $records ) < $max ) { // phpcs:ignore
-			$rec = json_decode( $line, true );
-			if ( is_array( $rec ) ) {
-				$records[] = $rec;
+		$max  = max( 1, (int) $max );
+		$lock = $this->lock( 'log' );
+		try {
+			$pending = (array) glob( $this->dir . '/attack-log.*.processing' );
+			sort( $pending );
+			$tmp = '';
+			foreach ( $pending as $candidate ) {
+				if ( is_string( $candidate ) && file_exists( $candidate ) ) {
+					$tmp = $candidate;
+					break;
+				}
 			}
-		}
-		if ( $fp ) {
+			if ( '' === $tmp ) {
+				$file = $this->dir . '/attack-log.jsonl';
+				if ( ! file_exists( $file ) || 0 === filesize( $file ) ) {
+					return array();
+				}
+				$tmp = $this->dir . '/attack-log.' . time() . '.' . getmypid() . '.' . mt_rand() . '.processing';
+				if ( ! @rename( $file, $tmp ) ) { // phpcs:ignore
+					return array();
+				}
+			}
+
+			$records = array();
+			$fp      = @fopen( $tmp, 'r' ); // phpcs:ignore
+			if ( ! $fp ) {
+				return array();
+			}
+			while ( count( $records ) < $max && false !== ( $line = fgets( $fp ) ) ) { // phpcs:ignore
+				$rec = json_decode( $line, true );
+				if ( is_array( $rec ) ) {
+					$records[] = $rec;
+				}
+			}
+
+			// Preserve unread lines instead of discarding them.
+			$remainder = '';
+			if ( ! feof( $fp ) ) {
+				$next = fgets( $fp ); // phpcs:ignore
+				if ( false !== $next ) {
+					$remPath = $this->dir . '/attack-log.' . time() . '.' . getmypid() . '.' . mt_rand() . '.rem.tmp';
+					$outFp   = @fopen( $remPath, 'w' ); // phpcs:ignore
+					if ( $outFp ) {
+						fwrite( $outFp, $next ); // phpcs:ignore
+						stream_copy_to_stream( $fp, $outFp );
+						fclose( $outFp ); // phpcs:ignore
+						$remainder = $remPath;
+					}
+				}
+			}
 			fclose( $fp ); // phpcs:ignore
+
+			if ( '' !== $remainder ) {
+				if ( ! @rename( $remainder, $tmp ) ) { // phpcs:ignore
+					@unlink( $remainder ); // phpcs:ignore
+					@unlink( $tmp ); // phpcs:ignore
+				}
+			} else {
+				@unlink( $tmp ); // phpcs:ignore
+			}
+			return $records;
+		} finally {
+			$this->unlock( $lock );
 		}
-		@unlink( $tmp ); // phpcs:ignore
-		return $records;
 	}
 
 	/* ---------------------------------------------------------------------

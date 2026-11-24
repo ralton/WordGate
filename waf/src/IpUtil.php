@@ -48,21 +48,40 @@ final class IpUtil {
 
 		if ( false === strpos( $range, '/' ) ) {
 			$rangeBin = @inet_pton( $range ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-			return false !== $rangeBin && $rangeBin === $ipBin;
+			return false !== $rangeBin && self::normalizeMapped( $rangeBin ) === self::normalizeMapped( $ipBin );
 		}
 
 		list( $subnet, $bits ) = explode( '/', $range, 2 );
-		$subnetBin             = @inet_pton( $subnet ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-		if ( false === $subnetBin || strlen( $subnetBin ) !== strlen( $ipBin ) ) {
+		if ( ! ctype_digit( $bits ) ) {
+			return false;
+		}
+		$bits      = (int) $bits;
+		$subnetBin = @inet_pton( $subnet ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( false === $subnetBin ) {
+			return false;
+		}
+		if ( strlen( $subnetBin ) !== strlen( $ipBin ) ) {
 			// Allow IPv4 to match an IPv4-mapped IPv6 range and vice versa.
-			$ipBin     = self::normalizeMapped( $ipBin );
-			$subnetBin = false === $subnetBin ? false : self::normalizeMapped( $subnetBin );
-			if ( false === $subnetBin || strlen( $subnetBin ) !== strlen( $ipBin ) ) {
+			$ipBin = self::normalizeMapped( $ipBin );
+			if ( 16 === strlen( $subnetBin ) ) {
+				$mapped = self::normalizeMapped( $subnetBin );
+				if ( 4 === strlen( $mapped ) ) {
+					if ( $bits < 96 ) {
+						return false;
+					}
+					$subnetBin = $mapped;
+					$bits     -= 96;
+				}
+			}
+			if ( strlen( $subnetBin ) !== strlen( $ipBin ) ) {
 				return false;
 			}
 		}
 
-		$bits      = (int) $bits;
+		$maxBits = strlen( $ipBin ) * 8;
+		if ( $bits < 0 || $bits > $maxBits ) {
+			return false;
+		}
 		$fullBytes = intdiv( $bits, 8 );
 		$remainder = $bits % 8;
 

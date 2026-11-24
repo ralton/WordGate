@@ -25,6 +25,13 @@ final class IpUtilTest extends TestCase {
 	public function testMappedIpv4() {
 		$this->assertSame( '1.2.3.4', IpUtil::normalize( '::ffff:1.2.3.4' ) );
 		$this->assertTrue( IpUtil::inRange( '::ffff:10.0.0.1', '10.0.0.0/8' ) );
+		$this->assertTrue( IpUtil::inRange( '::ffff:10.0.0.1', '10.0.0.1' ) );
+		$this->assertTrue( IpUtil::inRange( '10.0.0.1', '::ffff:10.0.0.0/104' ) );
+		$this->assertTrue( IpUtil::inRange( '10.0.0.1', '::ffff:10.0.0.0/105' ) );
+		$this->assertFalse( IpUtil::inRange( '10.128.0.1', '::ffff:10.0.0.0/105' ) );
+		$this->assertFalse( IpUtil::inRange( '10.0.0.1', '::ffff:10.0.0.0/64' ) );
+		$this->assertFalse( IpUtil::inRange( '10.0.0.1', '10.0.0.0/33' ) );
+		$this->assertFalse( IpUtil::inRange( '10.0.0.1', '10.0.0.0/abc' ) );
 	}
 
 	public function testValidation() {
