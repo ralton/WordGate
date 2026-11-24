@@ -33,6 +33,7 @@ final class Plugin {
 		Scanner\ScanRunner::register();
 		Log\EventLog::register();
 		Notifications::register();
+		TamperMonitor::register();
 		Api\RestController::register();
 
 		if ( is_admin() ) {

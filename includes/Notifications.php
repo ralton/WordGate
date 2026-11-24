@@ -41,6 +41,19 @@ final class Notifications {
 		return wp_mail( self::recipient(), '[' . $site . '] ' . $subject, $body );
 	}
 
+	/**
+	 * Send a tamper alert: always bypasses throttling for the first event of each
+	 * type per UTC day, then applies a short cooldown for repeated identical events.
+	 */
+	public static function sendTamper( $type, $subject, $body ) {
+		$dayKey = 'wordgate_tamper_' . md5( $type . '_' . gmdate( 'Y-m-d' ) );
+		if ( ! get_transient( $dayKey ) ) {
+			set_transient( $dayKey, 1, DAY_IN_SECONDS );
+			return self::send( 'tamper_' . $type, $subject, $body, 0 );
+		}
+		return self::send( 'tamper_' . $type, $subject, $body, 600 );
+	}
+
 	public static function adminLockout( \WP_User $user, $ip, $reason ) {
 		if ( ! Settings::get( 'notify_admin_lockout' ) ) {
 			return;

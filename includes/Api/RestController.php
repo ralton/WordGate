@@ -144,6 +144,7 @@ final class RestController {
 					'allow_rules'       => array_values( (array) $settings['allow_rules'] ),
 					'active_blocks'     => count( $active ),
 					'kill_switch'       => file_exists( WORDGATE_DATA_DIR . '/disable-waf' ) || ( defined( 'WORDGATE_WAF_DISABLE' ) && WORDGATE_WAF_DISABLE ),
+					'heartbeat_age_sec' => Plugin::storage()->heartbeatAge(),
 				),
 				'ip_detection' => self::ipDiagnostics(),
 				'environment'  => array(

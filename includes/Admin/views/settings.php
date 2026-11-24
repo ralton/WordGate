@@ -60,6 +60,7 @@ Admin::formStart( 'settings' );
 		<?php
 		Admin::text( 'notify_email', __( 'Send alerts to', 'wordgate' ), __( 'Leave empty to use the site admin email.', 'wordgate' ), get_option( 'admin_email' ) );
 		Admin::checkbox( 'notify_scan', __( 'New scan issues', 'wordgate' ) );
+		Admin::checkbox( 'notify_tamper', __( 'Tamper & security changes', 'wordgate' ), __( 'Alerts immediately if WordGate is deactivated, the WAF loader is removed, an administrator is created, or firewall settings are changed.', 'wordgate' ) );
 		Admin::checkbox( 'notify_admin_lockout', __( 'Administrator account locked out', 'wordgate' ) );
 		Admin::checkbox( 'notify_admin_login', __( 'Every administrator login', 'wordgate' ) );
 		?>

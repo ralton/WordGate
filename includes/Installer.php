@@ -26,9 +26,11 @@ final class Installer {
 	}
 
 	public static function deactivate() {
+		TamperMonitor::notifyDeactivation( 'site' );
 		// The WAF must not keep running once the plugin is off.
 		WafInstaller::uninstallBasic();
 		WafInstaller::uninstallExtended( true );
+		TamperMonitor::setExpectedWafMode( '' );
 		wp_clear_scheduled_hook( 'wordgate_hourly' );
 		wp_clear_scheduled_hook( 'wordgate_daily' );
 		wp_clear_scheduled_hook( 'wordgate_scheduled_scan' );
