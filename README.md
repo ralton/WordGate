@@ -4,7 +4,7 @@
 
 WordGate covers the same core jobs as commercial WordPress security suites: it blocks attacks before WordPress loads, finds compromised files, and stops account takeover. Every rule, signature, and line of code is public, so you can audit it and improve it.
 
-> **Status: 0.1.0 (early).** The core is functional and tested against WordPress 7.1, but it has not had broad production exposure yet. Run it in learning mode first on complex sites, and please report false positives.
+> **Status: 0.1.3 (early).** The core is functional and tested against WordPress 7.1, but it has not had broad production exposure yet. Run it in learning mode first on complex sites, and please report false positives.
 
 ---
 
@@ -13,7 +13,7 @@ WordGate covers the same core jobs as commercial WordPress security suites: it b
 ### Web application firewall
 - **Runs before WordPress.** *Extended* mode uses PHP's `auto_prepend_file`, so the firewall inspects every PHP request, including attacks aimed directly at a vulnerable plugin file, which never load WordPress at all. *Basic* mode runs as a must-use plugin and is set up automatically on activation.
 - **27 open rules** covering SQL injection (union, boolean, time-based, error-based, stacked queries), XSS, path traversal and local/remote file inclusion, PHP and OS command injection, PHP object injection, malicious uploads, scanner probes, privilege escalation via user meta, and XML-RPC multicall brute force.
-- **Normalisation before matching.** Double URL-encoding, HTML entities, SQL comments (`UN/**/ION`), null bytes and case tricks are stripped before inspection.
+- **Normalisation before matching.** Double URL-encoding, HTML entities, SQL comments (`UNION/*...*/SELECT`, `/*!50000SELECT*/`), null bytes and case tricks are stripped before inspection.
 - **Few false positives.** Every rule is tested against a corpus of ordinary traffic: comments containing "select" and "union", apostrophes, Markdown, JSON bodies, WooCommerce parameters, and so on. Logged-in users who can already publish unfiltered HTML get a signed, unforgeable cookie that skips HTML/JS-content rules.
 - **Learning mode**, per-rule disabling, and a **targeted allowlist** (rule + URL path + parameter) that can be filled in with one click from the activity log.
 - **Rate limiting** (throttle or block), **404-flood detection** for vulnerability scanners, and **IP / CIDR blocking** (IPv4 and IPv6), site-wide or login-only.

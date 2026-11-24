@@ -100,13 +100,13 @@ rules = [
        targets=["query_keys", "body_keys"], transforms=["lowercase"], admin_bypass=True,
        pattern=r"(?:^|\[)(?:wp_capabilities|wp_user_level|wp_\d+_capabilities|\w+_capabilities)(?:\]|$)"),
   dict(id=7002, name="WordPress: XML-RPC multicall brute force", category="wordpress", severity="high",
-       targets=["raw_body"], transforms=["lowercase"], paths=[r"/xmlrpc\.php$"],
-       pattern=r"(?:<methodname>\s*(?:wp\.getusersblogs|wp\.getprofile|wp\.getoptions|blogger\.getusersblogs|metaweblog\.getusersblogs|wp\.getcategories)\s*</methodname>[\s\S]*?){3,}"),
+       targets=["raw_body"], transforms=["lowercase"], paths=[r"/xmlrpc\.php(?:/|$)"],
+       pattern=r"(?:(?:<name>\s*methodname\s*</name>\s*<value>\s*(?:<string>\s*)?|<methodname>\s*)(?:wp\.getusersblogs|wp\.getprofile|wp\.getoptions|blogger\.getusersblogs|metaweblog\.getusersblogs|wp\.getcategories)(?:\s*</string>)?\s*(?:</value>|</methodname>)[\s\S]{0,4096}?){3,}"),
   dict(id=7003, name="WordPress: XML-RPC pingback abuse (SSRF / DDoS)", category="wordpress", severity="medium", action="log",
-       targets=["raw_body"], transforms=["lowercase"], paths=[r"/xmlrpc\.php$"],
+       targets=["raw_body"], transforms=["lowercase"], paths=[r"/xmlrpc\.php(?:/|$)"],
        pattern=r"<methodname>\s*pingback\.ping\s*</methodname>[\s\S]*?(?:https?://(?:127\.|10\.|192\.168\.|169\.254\.|localhost|\[::1\]))"),
   dict(id=7004, name="WordPress: option update via unauthenticated AJAX", category="wordpress", severity="critical",
-       targets=["body_keys", "query_keys"], transforms=["lowercase"], paths=[r"/wp-admin/admin-ajax\.php$", r"/wp-json/"], admin_bypass=True,
+       targets=["body_keys", "query_keys"], transforms=["lowercase"], paths=[r"/wp-admin/admin-ajax\.php(?:/|$)", r"/wp-json/"], admin_bypass=True,
        pattern=r"^(?:users_can_register|default_role|siteurl|admin_email)$"),
 ]
 

@@ -4,6 +4,7 @@ namespace WordGate\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use WordGate\Waf\Engine;
 use WordGate\Waf\Request;
+use WordGate\Waf\Rule;
 use WordGate\Waf\Storage;
 
 final class EngineTest extends TestCase {
@@ -58,6 +59,8 @@ final class EngineTest extends TestCase {
 		return array(
 			'union select'           => array( 1001, array( 'id' => "1 UNION ALL SELECT NULL,NULL,user_pass FROM wp_users--" ) ),
 			'union comment evasion'  => array( 1001, array( 'id' => "1/**/UnIoN/**/SeLeCt/**/1,2,3" ) ),
+			'union junk comment'     => array( 1001, array( 'id' => "1 UNION/*junk*/SELECT 1,2,3 FROM wp_users" ) ),
+			'union mysql cond'       => array( 1001, array( 'id' => "1 /*!50000UNION*/ /*!50000SELECT*/ user_pass FROM wp_users" ) ),
 			'double encoded union'   => array( 1001, array( 'id' => '1%2520union%2520select%2520concat(user_login)' ) ),
 			'tautology quote'        => array( 1002, array( 'user' => "admin' OR '1'='1" ) ),
 			'tautology numeric'      => array( 1002, array( 'id' => '5 or 1=1 --' ) ),
@@ -90,6 +93,7 @@ final class EngineTest extends TestCase {
 			'php upload'             => array( 5001, array(), '/wp-admin/admin-ajax.php', array( 'method' => 'POST', 'files' => array( 'f' => array( 'name' => 'shell.php', 'tmp_name' => '' ) ) ) ),
 			'double ext upload'      => array( 5001, array(), '/', array( 'method' => 'POST', 'files' => array( 'f' => array( 'name' => 'avatar.php.jpg', 'tmp_name' => '' ) ) ) ),
 			'php in image'           => array( 5002, array(), '/', array( 'method' => 'POST', 'files' => array( 'f' => array( 'name' => 'a.jpg', 'tmp_name' => '', 'content' => "GIF89a<?php system(\$_GET['c']); ?>" ) ) ) ),
+			'php in large polyglot'  => array( 5002, array(), '/', array( 'method' => 'POST', 'files' => array( 'f' => array( 'name' => 'a.jpg', 'tmp_name' => '', 'content' => 'GIF89a' . str_repeat( 'A', 70000 ) . "<?php system(\$_GET['c']); ?>" ) ) ) ),
 			'sqlmap ua'              => array( 6001, array(), '/', array( 'headers' => array( 'user-agent' => 'sqlmap/1.7.2#stable (https://sqlmap.org)' ) ) ),
 			'.env probe'             => array( 6002, array(), '/.env' ),
 			'.git probe'             => array( 6002, array(), '/.git/config' ),
@@ -97,13 +101,27 @@ final class EngineTest extends TestCase {
 			'uploads php'            => array( 6003, array(), '/wp-content/uploads/2024/01/x.php' ),
 			'capabilities'           => array( 7001, array(), '/wp-admin/admin-ajax.php', array( 'method' => 'POST', 'body' => array( 'action' => 'update_profile', 'meta' => array( 'wp_capabilities' => array( 'administrator' => 1 ) ) ) ) ),
 			'option tamper'          => array( 7004, array(), '/wp-admin/admin-ajax.php', array( 'method' => 'POST', 'body' => array( 'action' => 'x', 'default_role' => 'administrator' ) ) ),
+			'option tamper pathinfo' => array( 7004, array(), '/wp-admin/admin-ajax.php/extra', array( 'method' => 'POST', 'body' => array( 'action' => 'x', 'default_role' => 'administrator' ) ) ),
 			'xmlrpc multicall'       => array(
 				7002,
 				array(),
 				'/xmlrpc.php',
 				array(
 					'method' => 'POST',
-					'raw'    => '<methodCall><methodName>system.multicall</methodName>' . str_repeat( '<value><struct><member><name>methodName</name><value><string>wp.getUsersBlogs</string></value></member></struct></value>', 0 ) . str_repeat( '<methodName>wp.getUsersBlogs</methodName><param>admin</param><param>pass</param>', 5 ) . '</methodCall>',
+					'raw'    => '<methodCall><methodName>system.multicall</methodName><params><param><value><array><data>'
+						. str_repeat( '<value><struct><member><name>methodName</name><value><string>wp.getUsersBlogs</string></value></member><member><name>params</name><value><array><data><value><string>admin</string></value><value><string>pass</string></value></data></array></value></member></struct></value>', 5 )
+						. '</data></array></value></param></params></methodCall>',
+				),
+			),
+			'xmlrpc multicall pathinfo' => array(
+				7002,
+				array(),
+				'/%78mlrpc.php/extra',
+				array(
+					'method' => 'POST',
+					'raw'    => '<methodCall><methodName>system.multicall</methodName><params><param><value><array><data>'
+						. str_repeat( '<value><struct><member><name>methodName</name><value><string>wp.getUsersBlogs</string></value></member></struct></value>', 3 )
+						. '</data></array></value></param></params></methodCall>',
 				),
 			),
 		);
@@ -217,6 +235,9 @@ final class EngineTest extends TestCase {
 		$e = $this->engine();
 		$this->assertSame( Engine::ALLOW, $e->inspect( $this->get( array(), '/', array( 'ip' => '198.51.100.8' ) ) )['action'] );
 		$this->assertSame( Engine::BLOCK, $e->inspect( $this->get( array(), '/wp-login.php', array( 'ip' => '198.51.100.8' ) ) )['action'] );
+		$this->assertSame( Engine::BLOCK, $e->inspect( $this->get( array(), '/wp-login.php/extra', array( 'ip' => '198.51.100.8' ) ) )['action'] );
+		$this->assertSame( Engine::BLOCK, $e->inspect( $this->get( array(), '/%77p-login.php', array( 'ip' => '198.51.100.8' ) ) )['action'] );
+		$this->assertSame( Engine::BLOCK, $e->inspect( $this->get( array(), '/xmlrpc.php/extra', array( 'ip' => '198.51.100.8' ) ) )['action'] );
 	}
 
 	public function testExpiredBlockIgnored() {
@@ -260,5 +281,23 @@ final class EngineTest extends TestCase {
 		$this->assertSame( 'rule_block', $records[0]['type'] );
 		$this->assertSame( 1003, $records[0]['rule_id'] );
 		$this->assertSame( array(), $this->storage->drainLog() );
+	}
+
+	public function testDrainLogPreservesRemainderAcrossBatches() {
+		$engine = $this->engine();
+		for ( $i = 0; $i < 5; $i++ ) {
+			$engine->inspect( $this->get( array( 'id' => '1 and sleep(' . ( $i + 1 ) . ')' ) ) );
+		}
+		$this->assertCount( 2, $this->storage->drainLog( 2 ) );
+		$this->assertCount( 2, $this->storage->drainLog( 2 ) );
+		$this->assertCount( 1, $this->storage->drainLog( 2 ) );
+		$this->assertSame( array(), $this->storage->drainLog( 2 ) );
+	}
+
+	public function testRuleCompileDoesNotDoubleEscapeHash() {
+		$this->assertSame( '#foo\\#bar#iSs', Rule::compile( 'foo#bar' ) );
+		$this->assertSame( '#foo\\#bar#iSs', Rule::compile( 'foo\\#bar' ) );
+		$this->assertSame( '#foo\\\\\\#bar#iSs', Rule::compile( 'foo\\\\#bar' ) );
+		$this->assertSame( 1, preg_match( Rule::compile( 'foo\\#bar' ), 'foo#bar' ) );
 	}
 }

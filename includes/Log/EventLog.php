@@ -53,7 +53,7 @@ final class EventLog {
 	/**
 	 * Move WAF events from the data directory into the database.
 	 */
-	public static function ingest() {
+	public static function ingest( $max_records = 10000 ) {
 		$map = array(
 			'rule_block' => 'waf_block',
 			'ip_block'   => 'ip_blocked',
@@ -62,27 +62,33 @@ final class EventLog {
 			'rule_log'   => 'waf_log',
 		);
 		$n   = 0;
-		foreach ( Plugin::storage()->drainLog() as $r ) {
-			$type = isset( $map[ $r['type'] ] ) ? $map[ $r['type'] ] : 'waf_' . $r['type'];
-			self::add(
-				$type,
-				isset( $r['ip'] ) ? $r['ip'] : '',
-				array(
-					'method'  => isset( $r['method'] ) ? $r['method'] : '',
-					'uri'     => isset( $r['uri'] ) ? $r['uri'] : '',
-					'rule_id' => isset( $r['rule_id'] ) ? $r['rule_id'] : 0,
-					'reason'  => isset( $r['reason'] ) ? $r['reason'] : '',
-					'details' => array(
-						'ua'       => isset( $r['ua'] ) ? $r['ua'] : '',
-						'match'    => isset( $r['match'] ) ? $r['match'] : null,
-						'category' => isset( $r['category'] ) ? $r['category'] : '',
-						'status'   => isset( $r['status'] ) ? $r['status'] : 0,
+		while ( $n < $max_records ) {
+			$batch = Plugin::storage()->drainLog( min( 1000, $max_records - $n ) );
+			if ( ! $batch ) {
+				break;
+			}
+			foreach ( $batch as $r ) {
+				$type = isset( $map[ $r['type'] ] ) ? $map[ $r['type'] ] : 'waf_' . $r['type'];
+				self::add(
+					$type,
+					isset( $r['ip'] ) ? $r['ip'] : '',
+					array(
+						'method'  => isset( $r['method'] ) ? $r['method'] : '',
+						'uri'     => isset( $r['uri'] ) ? $r['uri'] : '',
+						'rule_id' => isset( $r['rule_id'] ) ? $r['rule_id'] : 0,
+						'reason'  => isset( $r['reason'] ) ? $r['reason'] : '',
+						'details' => array(
+							'ua'       => isset( $r['ua'] ) ? $r['ua'] : '',
+							'match'    => isset( $r['match'] ) ? $r['match'] : null,
+							'category' => isset( $r['category'] ) ? $r['category'] : '',
+							'status'   => isset( $r['status'] ) ? $r['status'] : 0,
+						),
 					),
-				),
-				! empty( $r['severity'] ) ? $r['severity'] : 'medium',
-				isset( $r['time'] ) ? $r['time'] : null
-			);
-			++$n;
+					! empty( $r['severity'] ) ? $r['severity'] : 'medium',
+					isset( $r['time'] ) ? $r['time'] : null
+				);
+				++$n;
+			}
 		}
 		return $n;
 	}

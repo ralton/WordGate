@@ -26,6 +26,13 @@ foreach ( array( 'wordgate_2fa', 'wordgate_2fa_pending', 'wordgate_2fa_grace_sta
 }
 remove_role( 'wordgate_auditor' );
 
+$wordgate_stub    = ABSPATH . 'wordgate-waf.php';
+$wordgate_prepend = (string) ini_get( 'auto_prepend_file' );
+if ( file_exists( $wordgate_stub ) && ( '' === $wordgate_prepend || realpath( $wordgate_prepend ) !== realpath( $wordgate_stub ) ) ) {
+	@unlink( $wordgate_stub ); // phpcs:ignore
+}
+wp_clear_scheduled_hook( 'wordgate_delete_waf_stub' );
+
 $wordgate_dir = defined( 'WORDGATE_DATA_DIR' ) ? WORDGATE_DATA_DIR : WP_CONTENT_DIR . '/wordgate';
 if ( is_dir( $wordgate_dir ) ) {
 	$wordgate_it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $wordgate_dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );

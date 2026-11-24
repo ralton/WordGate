@@ -38,10 +38,10 @@
 		bar.style.width = Math.min( 100, pct ) + '%';
 		var text = s.phase || '';
 		if ( s.stats && s.stats.files_total && s.index >= 4 ) {
-			text += ' — ' + s.stats.files_scanned.toLocaleString() + ' / ' + s.stats.files_total.toLocaleString() + ' files';
+			text += ' — ' + s.stats.files_scanned.toLocaleString() + ' / ' + s.stats.files_total.toLocaleString() + ' ' + WordGateAdmin.i18n.files;
 		}
 		if ( s.stats ) {
-			text += ' · ' + s.stats.issues + ' issues';
+			text += ' · ' + s.stats.issues + ' ' + WordGateAdmin.i18n.issues;
 		}
 		phase.textContent = text;
 	}

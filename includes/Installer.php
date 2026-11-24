@@ -28,11 +28,12 @@ final class Installer {
 	public static function deactivate() {
 		// The WAF must not keep running once the plugin is off.
 		WafInstaller::uninstallBasic();
-		WafInstaller::uninstallExtended();
+		WafInstaller::uninstallExtended( true );
 		wp_clear_scheduled_hook( 'wordgate_hourly' );
 		wp_clear_scheduled_hook( 'wordgate_daily' );
 		wp_clear_scheduled_hook( 'wordgate_scheduled_scan' );
 		wp_clear_scheduled_hook( 'wordgate_scan_continue' );
+		wp_clear_scheduled_hook( 'wordgate_delete_waf_stub' );
 	}
 
 	public static function scheduleCron() {

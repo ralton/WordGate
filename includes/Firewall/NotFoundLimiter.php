@@ -34,7 +34,7 @@ final class NotFoundLimiter {
 			$minutes = max( 1, (int) Settings::get( 'rate_limit_block_minutes' ) );
 			Plugin::storage()->addBlock( $ip, 'Too many 404s (scanner)', $minutes, 'all', '404_limit' );
 			EventLog::add( 'block_404', $ip, array( 'reason' => sprintf( 'Exceeded %d not-found responses per minute', $limit ) ), 'medium' );
-			wp_die( esc_html__( 'Too many requests.', 'wordgate' ), 429 );
+			wp_die( esc_html__( 'Too many requests.', 'wordgate' ), '', array( 'response' => 429 ) );
 		}
 	}
 }

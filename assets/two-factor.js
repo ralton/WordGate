@@ -38,10 +38,15 @@
 		}
 	}
 
+	function currentPassword() {
+		var el = document.getElementById( 'wordgate-2fa-password' );
+		return el ? el.value : '';
+	}
+
 	on( 'wordgate-2fa-begin', function () {
 		post( 'wordgate_2fa_begin' ).then( function ( res ) {
 			if ( ! res.success ) {
-				return say( 'Error', true );
+				return say( ( res.data && res.data.message ) || WordGate2FA.i18n.error, true );
 			}
 			var qr = qrcode( 0, 'M' );
 			qr.addData( res.data.uri );
@@ -58,28 +63,41 @@
 		var code = document.getElementById( 'wordgate-2fa-code' ).value;
 		post( 'wordgate_2fa_enable', { code: code } ).then( function ( res ) {
 			if ( ! res.success ) {
-				return say( res.data && res.data.message, true );
+				return say( ( res.data && res.data.message ) || WordGate2FA.i18n.error, true );
 			}
 			document.getElementById( 'wordgate-2fa-setup' ).hidden = true;
-			say( '✓ Two-factor authentication is on.' );
+			say( WordGate2FA.i18n.enabled );
 			showCodes( res.data.codes );
 		} );
 	} );
 
 	on( 'wordgate-2fa-disable', function () {
+		var password = currentPassword();
+		if ( WordGate2FA.isSelf && ! password ) {
+			return say( WordGate2FA.i18n.passwordMissing, true );
+		}
 		if ( ! window.confirm( WordGate2FA.i18n.confirmDisable ) ) {
 			return;
 		}
-		post( 'wordgate_2fa_disable' ).then( function () {
+		post( 'wordgate_2fa_disable', { password: password } ).then( function ( res ) {
+			if ( ! res.success ) {
+				return say( ( res.data && res.data.message ) || WordGate2FA.i18n.error, true );
+			}
 			window.location.reload();
 		} );
 	} );
 
 	on( 'wordgate-2fa-recovery', function () {
-		post( 'wordgate_2fa_recovery' ).then( function ( res ) {
-			if ( res.success ) {
-				showCodes( res.data.codes );
+		var password = currentPassword();
+		if ( ! password ) {
+			return say( WordGate2FA.i18n.passwordMissing, true );
+		}
+		post( 'wordgate_2fa_recovery', { password: password } ).then( function ( res ) {
+			if ( ! res.success ) {
+				return say( ( res.data && res.data.message ) || WordGate2FA.i18n.error, true );
 			}
+			say( '' );
+			showCodes( res.data.codes );
 		} );
 	} );
 

@@ -145,6 +145,30 @@ final class Settings {
 		if ( isset( $out['disabled_rules'] ) ) {
 			$out['disabled_rules'] = array_values( array_unique( array_map( 'intval', $out['disabled_rules'] ) ) );
 		}
+		if ( isset( $out['allow_rules'] ) ) {
+			$clean = array();
+			foreach ( $out['allow_rules'] as $entry ) {
+				if ( ! is_array( $entry ) ) {
+					continue;
+				}
+				$rule_id = isset( $entry['rule_id'] ) ? max( 0, (int) $entry['rule_id'] ) : 0;
+				$path    = isset( $entry['path'] ) ? sanitize_text_field( (string) $entry['path'] ) : '';
+				$param   = isset( $entry['param'] ) ? sanitize_text_field( (string) $entry['param'] ) : '';
+				if ( 0 === $rule_id && '' === $path && '' === $param ) {
+					continue;
+				}
+				if ( '' !== $path && false === @preg_match( Waf\Rule::compile( $path ), '' ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
+					continue;
+				}
+				$clean[] = array(
+					'rule_id' => $rule_id,
+					'path'    => $path,
+					'param'   => $param,
+					'added'   => isset( $entry['added'] ) ? (int) $entry['added'] : time(),
+				);
+			}
+			$out['allow_rules'] = $clean;
+		}
 		if ( isset( $out['tfa_required_roles'] ) ) {
 			$out['tfa_required_roles'] = array_values( array_map( 'sanitize_key', $out['tfa_required_roles'] ) );
 		}

@@ -74,6 +74,8 @@ final class Admin {
 					'confirmDelete' => __( 'Delete this file permanently? Make sure you have a backup.', 'wordgate' ),
 					'done'          => __( 'Scan complete. Reloading…', 'wordgate' ),
 					'failed'        => __( 'The scan stopped unexpectedly. Check the notes below and try again.', 'wordgate' ),
+					'files'         => __( 'files', 'wordgate' ),
+					'issues'        => __( 'issues', 'wordgate' ),
 				),
 			)
 		);
@@ -228,7 +230,7 @@ final class Admin {
 
 	private static function guard( $nonce_action ) {
 		if ( ! current_user_can( self::CAP ) ) {
-			wp_die( esc_html__( 'Sorry, you are not allowed to do that.', 'wordgate' ), 403 );
+			wp_die( esc_html__( 'Sorry, you are not allowed to do that.', 'wordgate' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( $nonce_action );
 	}
@@ -284,7 +286,7 @@ final class Admin {
 		if ( ! IpUtil::isValidRange( $ip ) ) {
 			self::back( 'error', __( 'Enter a valid IP address or CIDR range (e.g. 203.0.113.7 or 203.0.113.0/24).', 'wordgate' ) );
 		}
-		if ( 'all' === $scope && IpUtil::inRange( Plugin::clientIp(), $ip ) ) {
+		if ( IpUtil::inRange( Plugin::clientIp(), $ip ) ) {
 			self::back( 'error', __( 'That would block your own IP address. Refusing.', 'wordgate' ) );
 		}
 		Plugin::storage()->addBlock( $ip, '' !== $reason ? $reason : __( 'Manual block', 'wordgate' ), $minutes, $scope, 'manual' );

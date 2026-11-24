@@ -487,9 +487,9 @@
     "lowercase"
    ],
    "paths": [
-    "/xmlrpc\\.php$"
+    "/xmlrpc\\.php(?:/|$)"
    ],
-   "pattern": "(?:<methodname>\\s*(?:wp\\.getusersblogs|wp\\.getprofile|wp\\.getoptions|blogger\\.getusersblogs|metaweblog\\.getusersblogs|wp\\.getcategories)\\s*</methodname>[\\s\\S]*?){3,}",
+   "pattern": "(?:(?:<name>\\s*methodname\\s*</name>\\s*<value>\\s*(?:<string>\\s*)?|<methodname>\\s*)(?:wp\\.getusersblogs|wp\\.getprofile|wp\\.getoptions|blogger\\.getusersblogs|metaweblog\\.getusersblogs|wp\\.getcategories)(?:\\s*</string>)?\\s*(?:</value>|</methodname>)[\\s\\S]{0,4096}?){3,}",
    "action": "block"
   },
   {
@@ -505,7 +505,7 @@
     "lowercase"
    ],
    "paths": [
-    "/xmlrpc\\.php$"
+    "/xmlrpc\\.php(?:/|$)"
    ],
    "pattern": "<methodname>\\s*pingback\\.ping\\s*</methodname>[\\s\\S]*?(?:https?://(?:127\\.|10\\.|192\\.168\\.|169\\.254\\.|localhost|\\[::1\\]))"
   },
@@ -522,7 +522,7 @@
     "lowercase"
    ],
    "paths": [
-    "/wp-admin/admin-ajax\\.php$",
+    "/wp-admin/admin-ajax\\.php(?:/|$)",
     "/wp-json/"
    ],
    "admin_bypass": true,

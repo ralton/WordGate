@@ -26,14 +26,21 @@ final class TwoFactor {
 	const META          = 'wordgate_2fa';
 	const PENDING_META  = 'wordgate_2fa_pending';
 	const GRACE_META    = 'wordgate_2fa_grace_start';
+	const TOKEN_COOKIE  = 'wordgate_2fa_token';
 	const TOKEN_TTL     = 600;
 	const MAX_ATTEMPTS  = 5;
 	const RECOVERY_CODES = 10;
 
 	/** @var bool Set while we complete a login ourselves, so wp_login is not intercepted twice. */
 	private static $completing = false;
+	/** @var int User ID whose initial session token is pending 2FA verification. */
+	private static $pendingSessionUser = 0;
+	/** @var string Session token minted by wp_set_auth_cookie() to destroy before 2FA. */
+	private static $pendingSessionToken = '';
 
 	public static function register() {
+		add_action( 'set_auth_cookie', array( __CLASS__, 'captureSession' ), 1, 6 );
+		add_filter( 'send_auth_cookies', array( __CLASS__, 'suppressAuthCookies' ), 1 );
 		add_action( 'wp_login', array( __CLASS__, 'intercept' ), 1, 2 );
 		add_action( 'login_form_wordgate_2fa', array( __CLASS__, 'handleInterstitial' ) );
 		add_filter( 'authenticate', array( __CLASS__, 'blockPasswordOnlyApis' ), 60, 3 );
@@ -48,6 +55,37 @@ final class TwoFactor {
 
 		add_action( 'admin_notices', array( __CLASS__, 'enforcementNotice' ) );
 		add_action( 'admin_init', array( __CLASS__, 'enforce' ), 1 );
+		add_filter( 'rest_authentication_errors', array( __CLASS__, 'enforceRest' ), 90 );
+	}
+
+	/**
+	 * True when this user is in the middle of a password login that must pass 2FA
+	 * before any auth or bypass cookies may be emitted.
+	 */
+	public static function isIntercepting( $user_id ) {
+		return ! self::$completing && self::isEnabled( (int) $user_id );
+	}
+
+	/**
+	 * Capture the session token created by wp_set_auth_cookie() so intercept() can
+	 * destroy it before redirecting to the 2FA screen.
+	 */
+	public static function captureSession( $auth_cookie, $expire, $expiration, $user_id, $scheme, $token ) {
+		if ( self::isIntercepting( $user_id ) ) {
+			self::$pendingSessionUser  = (int) $user_id;
+			self::$pendingSessionToken = (string) $token;
+		}
+	}
+
+	/**
+	 * Prevent WordPress from emitting Set-Cookie headers for a 2FA-enabled account
+	 * before the second factor has been verified.
+	 */
+	public static function suppressAuthCookies( $send ) {
+		if ( ! self::$completing && self::$pendingSessionUser > 0 ) {
+			return false;
+		}
+		return $send;
 	}
 
 	/* ---------------------------------------------------------------------
@@ -138,33 +176,66 @@ final class TwoFactor {
 			return;
 		}
 
+		// Destroy the session token WordPress just created in wp_set_auth_cookie()
+		// so no valid session exists until the second factor succeeds.
+		if ( '' !== self::$pendingSessionToken && self::$pendingSessionUser === $user->ID ) {
+			\WP_Session_Tokens::get_instance( $user->ID )->destroy( self::$pendingSessionToken );
+		} elseif ( function_exists( 'wp_destroy_current_session' ) ) {
+			wp_destroy_current_session();
+		}
+		self::$pendingSessionUser  = 0;
+		self::$pendingSessionToken = '';
+
+		// Defense in depth: remove any Set-Cookie headers emitted earlier in this request.
+		if ( ! headers_sent() && function_exists( 'header_remove' ) ) {
+			header_remove( 'Set-Cookie' );
+		}
 		wp_clear_auth_cookie();
 
 		// phpcs:disable WordPress.Security.NonceVerification
-		$token = bin2hex( random_bytes( 32 ) );
+		$token   = bin2hex( random_bytes( 32 ) );
+		$csrf    = bin2hex( random_bytes( 16 ) );
+		$expires = time() + self::TOKEN_TTL;
 		set_transient(
 			'wordgate_2fa_' . hash( 'sha256', $token ),
 			array(
 				'user_id'     => $user->ID,
 				'remember'    => ! empty( $_POST['rememberme'] ),
 				'redirect_to' => isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '',
-				'attempts'    => 0,
 				'ip'          => Plugin::clientIp(),
+				'csrf'        => $csrf,
+				'expires'     => $expires,
 			),
 			self::TOKEN_TTL
 		);
 		// phpcs:enable
 
-		wp_safe_redirect(
-			add_query_arg(
-				array(
-					'action'    => 'wordgate_2fa',
-					'wg_token'  => $token,
-				),
-				wp_login_url()
+		self::setTokenCookie( $token, $expires );
+		wp_safe_redirect( add_query_arg( 'action', 'wordgate_2fa', wp_login_url() ) );
+		exit;
+	}
+
+	private static function setTokenCookie( $token, $expires ) {
+		if ( headers_sent() ) {
+			return;
+		}
+		setcookie(
+			self::TOKEN_COOKIE,
+			$token,
+			array(
+				'expires'  => (int) $expires,
+				'path'     => '/',
+				'domain'   => COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Lax',
 			)
 		);
-		exit;
+	}
+
+	private static function clearTokenCookie() {
+		self::setTokenCookie( '', time() - YEAR_IN_SECONDS );
+		unset( $_COOKIE[ self::TOKEN_COOKIE ] );
 	}
 
 	/**
@@ -174,12 +245,17 @@ final class TwoFactor {
 		nocache_headers();
 		header( 'Referrer-Policy: no-referrer' );
 
-		// phpcs:disable WordPress.Security.NonceVerification -- the single-use token is the CSRF protection.
-		$token = isset( $_REQUEST['wg_token'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['wg_token'] ) ) : '';
-		$key   = 'wordgate_2fa_' . hash( 'sha256', $token );
-		$state = '' !== $token ? get_transient( $key ) : false;
+		// phpcs:disable WordPress.Security.NonceVerification -- verified via per-session CSRF token below.
+		$token = isset( $_COOKIE[ self::TOKEN_COOKIE ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ self::TOKEN_COOKIE ] ) ) : '';
+		$hash  = '' !== $token ? hash( 'sha256', $token ) : '';
+		$key   = '' !== $hash ? 'wordgate_2fa_' . $hash : '';
+		$state = '' !== $key ? get_transient( $key ) : false;
 
-		if ( ! is_array( $state ) || $state['ip'] !== Plugin::clientIp() ) {
+		if ( ! is_array( $state ) || $state['ip'] !== Plugin::clientIp() || ( isset( $state['expires'] ) && (int) $state['expires'] < time() ) ) {
+			if ( '' !== $key ) {
+				delete_transient( $key );
+			}
+			self::clearTokenCookie();
 			wp_safe_redirect( add_query_arg( 'wordgate_2fa', 'expired', wp_login_url() ) );
 			exit;
 		}
@@ -188,43 +264,51 @@ final class TwoFactor {
 		$error = '';
 
 		if ( $user && 'POST' === $_SERVER['REQUEST_METHOD'] && isset( $_POST['wordgate_code'] ) ) {
-			$code   = sanitize_text_field( wp_unslash( $_POST['wordgate_code'] ) );
-			$method = self::verifyAndConsume( $user->ID, $code );
+			$csrf = isset( $_POST['wg_csrf'] ) ? sanitize_text_field( wp_unslash( $_POST['wg_csrf'] ) ) : '';
+			if ( empty( $state['csrf'] ) || ! hash_equals( $state['csrf'], $csrf ) ) {
+				$error = __( 'Invalid request. Please try again.', 'wordgate' );
+			} else {
+				$code   = sanitize_text_field( wp_unslash( $_POST['wordgate_code'] ) );
+				$method = self::verifyAndConsume( $user->ID, $code );
 
-			if ( $method ) {
-				delete_transient( $key );
-				EventLog::add(
-					'2fa_success',
-					Plugin::clientIp(),
-					array(
-						'user_login' => $user->user_login,
-						'reason'     => 'recovery' === $method ? 'Recovery code used' : '',
-					),
-					'recovery' === $method ? 'medium' : 'info'
-				);
+				if ( $method ) {
+					delete_transient( $key );
+					Plugin::storage()->resetCounter( '2fa:' . $hash );
+					self::clearTokenCookie();
+					EventLog::add(
+						'2fa_success',
+						Plugin::clientIp(),
+						array(
+							'user_login' => $user->user_login,
+							'reason'     => 'recovery' === $method ? 'Recovery code used' : '',
+						),
+						'recovery' === $method ? 'medium' : 'info'
+					);
 
-				self::$completing = true;
-				wp_set_auth_cookie( $user->ID, (bool) $state['remember'] );
-				do_action( 'wp_login', $user->user_login, $user ); // Let other plugins see the completed login.
-				self::$completing = false;
+					self::$completing = true;
+					wp_set_auth_cookie( $user->ID, (bool) $state['remember'] );
+					do_action( 'wp_login', $user->user_login, $user ); // Let other plugins see the completed login.
+					self::$completing = false;
 
-				$redirect = $state['redirect_to'] ? $state['redirect_to'] : admin_url();
-				$redirect = apply_filters( 'login_redirect', $redirect, $state['redirect_to'], $user );
-				wp_safe_redirect( $redirect );
-				exit;
+					$redirect = $state['redirect_to'] ? $state['redirect_to'] : admin_url();
+					$redirect = apply_filters( 'login_redirect', $redirect, $state['redirect_to'], $user );
+					wp_safe_redirect( $redirect );
+					exit;
+				}
+
+				$attempts = Plugin::storage()->increment( '2fa:' . $hash, self::TOKEN_TTL );
+				EventLog::add( '2fa_failed', Plugin::clientIp(), array( 'user_login' => $user->user_login ), 'medium' );
+				do_action( 'wp_login_failed', $user->user_login, new \WP_Error( 'wordgate_2fa_invalid' ) ); // Counts toward brute-force lockout.
+
+				if ( $attempts >= self::MAX_ATTEMPTS ) {
+					delete_transient( $key );
+					Plugin::storage()->resetCounter( '2fa:' . $hash );
+					self::clearTokenCookie();
+					wp_safe_redirect( add_query_arg( 'wordgate_2fa', 'expired', wp_login_url() ) );
+					exit;
+				}
+				$error = __( 'Invalid authentication code. Please try again.', 'wordgate' );
 			}
-
-			++$state['attempts'];
-			EventLog::add( '2fa_failed', Plugin::clientIp(), array( 'user_login' => $user->user_login ), 'medium' );
-			do_action( 'wp_login_failed', $user->user_login, new \WP_Error( 'wordgate_2fa_invalid' ) ); // Counts toward brute-force lockout.
-
-			if ( $state['attempts'] >= self::MAX_ATTEMPTS ) {
-				delete_transient( $key );
-				wp_safe_redirect( add_query_arg( 'wordgate_2fa', 'expired', wp_login_url() ) );
-				exit;
-			}
-			set_transient( $key, $state, self::TOKEN_TTL );
-			$error = __( 'Invalid authentication code. Please try again.', 'wordgate' );
 		}
 		// phpcs:enable
 
@@ -236,7 +320,7 @@ final class TwoFactor {
 				<label for="wordgate_code"><?php esc_html_e( 'Authentication code', 'wordgate' ); ?></label>
 				<input type="text" name="wordgate_code" id="wordgate_code" class="input" value="" size="20" inputmode="numeric" autocomplete="one-time-code" autofocus required />
 			</p>
-			<input type="hidden" name="wg_token" value="<?php echo esc_attr( $token ); ?>" />
+			<input type="hidden" name="wg_csrf" value="<?php echo esc_attr( $state['csrf'] ); ?>" />
 			<p class="submit">
 				<input type="submit" class="button button-primary button-large" value="<?php esc_attr_e( 'Verify', 'wordgate' ); ?>" />
 			</p>
@@ -300,22 +384,51 @@ final class TwoFactor {
 		);
 	}
 
+	private static function isPastGrace( \WP_User $user ) {
+		return $user->exists() && self::isRequired( $user ) && ! self::isEnabled( $user->ID ) && self::graceRemaining( $user ) <= 0;
+	}
+
 	/**
-	 * After the grace period, users who must use 2FA can only reach their profile.
+	 * After the grace period, users who must use 2FA can only reach their profile
+	 * and WordGate's own 2FA setup endpoints.
 	 */
 	public static function enforce() {
-		if ( wp_doing_ajax() ) {
+		$user = wp_get_current_user();
+		if ( ! self::isPastGrace( $user ) ) {
 			return;
 		}
-		$user = wp_get_current_user();
-		if ( ! $user->exists() || ! self::isRequired( $user ) || self::isEnabled( $user->ID ) || self::graceRemaining( $user ) > 0 ) {
-			return;
+		if ( wp_doing_ajax() ) {
+			// phpcs:ignore WordPress.Security.NonceVerification
+			$action = isset( $_REQUEST['action'] ) ? sanitize_key( $_REQUEST['action'] ) : '';
+			if ( in_array( $action, array( 'wordgate_2fa_begin', 'wordgate_2fa_enable' ), true ) ) {
+				return;
+			}
+			wp_send_json_error( array( 'message' => __( 'Two-factor authentication is required before using this site.', 'wordgate' ) ), 403 );
 		}
 		global $pagenow;
 		if ( 'profile.php' !== $pagenow ) {
 			wp_safe_redirect( admin_url( 'profile.php#wordgate-2fa' ) );
 			exit;
 		}
+	}
+
+	/**
+	 * Block cookie-authenticated REST requests when a user is past their 2FA grace period.
+	 *
+	 * @param \WP_Error|null|true $result
+	 */
+	public static function enforceRest( $result ) {
+		if ( is_wp_error( $result ) || ! is_user_logged_in() || did_action( 'application_password_did_authenticate' ) ) {
+			return $result;
+		}
+		if ( self::isPastGrace( wp_get_current_user() ) ) {
+			return new \WP_Error(
+				'wordgate_2fa_required',
+				__( 'Two-factor authentication is required for your account. Set it up from your profile page first.', 'wordgate' ),
+				array( 'status' => 403 )
+			);
+		}
+		return $result;
 	}
 
 	/* ---------------------------------------------------------------------
@@ -327,8 +440,9 @@ final class TwoFactor {
 		if ( ! $is_self && ! current_user_can( 'edit_user', $user->ID ) ) {
 			return;
 		}
-		$enabled  = self::isEnabled( $user->ID );
-		$c        = self::config( $user->ID );
+		$enabled   = self::isEnabled( $user->ID );
+		$required  = self::isRequired( $user );
+		$c         = self::config( $user->ID );
 		$remaining = isset( $c['recovery'] ) ? count( $c['recovery'] ) : 0;
 		wp_enqueue_script( 'wordgate-qrcode', WORDGATE_URL . 'assets/vendor/qrcode.js', array(), '2.0.4', true );
 		wp_enqueue_script( 'wordgate-2fa', WORDGATE_URL . 'assets/two-factor.js', array( 'wordgate-qrcode' ), WORDGATE_VERSION, true );
@@ -339,9 +453,13 @@ final class TwoFactor {
 				'ajax'   => admin_url( 'admin-ajax.php' ),
 				'nonce'  => wp_create_nonce( 'wordgate_2fa_' . $user->ID ),
 				'userId' => $user->ID,
+				'isSelf' => $is_self,
 				'i18n'   => array(
-					'confirmDisable' => __( 'Turn off two-factor authentication for this account?', 'wordgate' ),
-					'saveCodes'      => __( 'Save these recovery codes somewhere safe. Each can be used once if you lose your phone. They will not be shown again.', 'wordgate' ),
+					'confirmDisable'  => __( 'Turn off two-factor authentication for this account?', 'wordgate' ),
+					'saveCodes'       => __( 'Save these recovery codes somewhere safe. Each can be used once if you lose your phone. They will not be shown again.', 'wordgate' ),
+					'enabled'         => __( '✓ Two-factor authentication is on.', 'wordgate' ),
+					'error'           => __( 'Something went wrong. Please try again.', 'wordgate' ),
+					'passwordMissing' => __( 'Enter your current password to confirm this change.', 'wordgate' ),
 				),
 			)
 		);
@@ -356,11 +474,21 @@ final class TwoFactor {
 				echo esc_html( sprintf( _n( '%d recovery code remaining.', '%d recovery codes remaining.', $remaining, 'wordgate' ), $remaining ) );
 				?>
 				</p>
+				<?php if ( $is_self ) : ?>
+					<p>
+						<label for="wordgate-2fa-password"><?php esc_html_e( 'Current password (required to change 2FA settings):', 'wordgate' ); ?></label><br>
+						<input type="password" id="wordgate-2fa-password" autocomplete="current-password" class="regular-text" />
+					</p>
+				<?php endif; ?>
 				<p>
 					<?php if ( $is_self ) : ?>
 						<button type="button" class="button" id="wordgate-2fa-recovery"><?php esc_html_e( 'Generate new recovery codes', 'wordgate' ); ?></button>
 					<?php endif; ?>
-					<button type="button" class="button" id="wordgate-2fa-disable"><?php esc_html_e( 'Turn off', 'wordgate' ); ?></button>
+					<?php if ( ! $is_self || ! $required ) : ?>
+						<button type="button" class="button" id="wordgate-2fa-disable"><?php esc_html_e( 'Turn off', 'wordgate' ); ?></button>
+					<?php else : ?>
+						<span class="description"><?php esc_html_e( 'Two-factor authentication is required for your role. Contact an administrator if you need it reset.', 'wordgate' ); ?></span>
+					<?php endif; ?>
 				</p>
 			<?php elseif ( $is_self ) : ?>
 				<p><?php esc_html_e( 'Protect your account with a 6-digit code from an authenticator app (1Password, Bitwarden, Google Authenticator, Authy, …) in addition to your password.', 'wordgate' ); ?></p>
@@ -432,15 +560,32 @@ final class TwoFactor {
 		wp_send_json_success( array( 'codes' => $codes ) );
 	}
 
+	private static function verifyCurrentPassword( $user_id ) {
+		// phpcs:ignore WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput -- nonce checked in ajaxGuard; passwords must not be sanitized.
+		$password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+		$user     = get_user_by( 'id', $user_id );
+		if ( ! $user || '' === $password || ! wp_check_password( $password, $user->user_pass, $user->ID ) ) {
+			wp_send_json_error( array( 'message' => __( 'Your current password is incorrect.', 'wordgate' ) ), 403 );
+		}
+	}
+
 	public static function ajaxDisable() {
 		$user_id = self::ajaxGuard( false );
+		$is_self = get_current_user_id() === $user_id;
+		$target  = get_user_by( 'id', $user_id );
+		if ( $is_self ) {
+			if ( $target && self::isRequired( $target ) ) {
+				wp_send_json_error( array( 'message' => __( 'Two-factor authentication is required for your role. Contact an administrator to reset it.', 'wordgate' ) ), 403 );
+			}
+			self::verifyCurrentPassword( $user_id );
+		}
 		self::disable( $user_id );
 		EventLog::add(
 			'2fa_disabled',
 			Plugin::clientIp(),
 			array(
-				'user_login' => get_userdata( $user_id )->user_login,
-				'reason'     => get_current_user_id() === $user_id ? 'By user' : 'By ' . wp_get_current_user()->user_login,
+				'user_login' => $target ? $target->user_login : '',
+				'reason'     => $is_self ? 'By user' : 'By ' . wp_get_current_user()->user_login,
 			),
 			'medium'
 		);
@@ -452,6 +597,7 @@ final class TwoFactor {
 		if ( ! self::isEnabled( $user_id ) ) {
 			wp_send_json_error();
 		}
+		self::verifyCurrentPassword( $user_id );
 		wp_send_json_success( array( 'codes' => self::generateRecoveryCodes( $user_id ) ) );
 	}
 }

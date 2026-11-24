@@ -37,8 +37,19 @@ final class Repair {
 			if ( 200 !== wp_remote_retrieve_response_code( $res ) || ! in_array( md5( $body ), $expected, true ) ) {
 				return new \WP_Error( 'wordgate_download', __( 'Could not download a verified original copy of this file. Reinstall the plugin or WordPress instead.', 'wordgate' ) );
 			}
-			if ( false === file_put_contents( $file, $body ) ) { // phpcs:ignore
+			$dir   = dirname( $file );
+			$tmp   = $dir . '/.' . basename( $file ) . '.' . getmypid() . '.' . mt_rand() . '.wg-tmp';
+			$perms = file_exists( $file ) ? ( fileperms( $file ) & 0777 ) : 0644;
+			if ( false === @file_put_contents( $tmp, $body, LOCK_EX ) ) { // phpcs:ignore
 				return new \WP_Error( 'wordgate_write', __( 'The file could not be written. Check file permissions.', 'wordgate' ) );
+			}
+			@chmod( $tmp, $perms ); // phpcs:ignore
+			if ( ! @rename( $tmp, $file ) ) { // phpcs:ignore
+				@unlink( $tmp ); // phpcs:ignore
+				return new \WP_Error( 'wordgate_write', __( 'The file could not be written. Check file permissions.', 'wordgate' ) );
+			}
+			if ( function_exists( 'opcache_invalidate' ) ) {
+				@opcache_invalidate( $file, true ); // phpcs:ignore
 			}
 			Issues::setStatus( $issue['id'], 'resolved' );
 			return true;

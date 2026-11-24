@@ -26,8 +26,8 @@ $wg_users = get_users(
 		Admin::number( 'bf_max_failures', __( 'Failed attempts allowed', 'wordgate' ), '', __( 'per IP', 'wordgate' ) );
 		Admin::number( 'bf_window_minutes', __( 'Counted within', 'wordgate' ), '', __( 'minutes', 'wordgate' ) );
 		Admin::number( 'bf_lockout_minutes', __( 'Lockout duration', 'wordgate' ), __( 'Locked-out IPs can still browse the site; only login and XML-RPC are blocked.', 'wordgate' ), __( 'minutes', 'wordgate' ) );
-		Admin::checkbox( 'bf_invalid_username_lockout', __( 'Instant lockout for unknown usernames', 'wordgate' ), __( 'Lock out on the first attempt with a username that does not exist. Very effective against bots, but may lock out real users who mistype.', 'wordgate' ) );
-		Admin::textarea( 'bf_banned_usernames', __( 'Banned usernames', 'wordgate' ), __( 'Any login attempt with one of these (if no such user exists) causes an immediate lockout. One per line.', 'wordgate' ) );
+		Admin::checkbox( 'bf_invalid_username_lockout', __( 'Instant lockout for unknown usernames', 'wordgate' ), __( 'Lock out on the first attempt with a username that does not exist. Very effective against bots, but may lock out real users who mistype and can reveal whether a username exists despite generic login errors.', 'wordgate' ) );
+		Admin::textarea( 'bf_banned_usernames', __( 'Banned usernames', 'wordgate' ), __( 'Any login attempt with one of these (if no such user exists) causes an immediate lockout. One per line. Note: because existing accounts are not immediately locked out, this can reveal whether a listed username exists.', 'wordgate' ) );
 		Admin::checkbox( 'generic_login_errors', __( 'Generic login errors', 'wordgate' ), __( 'Do not reveal whether the username or the password was wrong.', 'wordgate' ) );
 		?>
 	</table>

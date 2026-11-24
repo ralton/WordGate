@@ -58,6 +58,15 @@ $wg_servers  = array(
 			</details>
 		<?php endif; ?>
 	<?php endif; ?>
+	<?php
+	$wg_sw = isset( $_SERVER['SERVER_SOFTWARE'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) ) : '';
+	if ( 'user-ini' === $wg_server || false !== strpos( $wg_sw, 'nginx' ) ) :
+		?>
+		<details><summary><?php esc_html_e( 'Nginx configuration (block web access to data files and .user.ini)', 'wordgate' ); ?></summary>
+			<p><?php esc_html_e( 'Nginx ignores .htaccess files. Add this block to your site\'s server {} config so logs and .user.ini cannot be downloaded:', 'wordgate' ); ?></p>
+			<pre class="wg-code"><?php echo esc_html( WafInstaller::nginxSnippet() ); ?></pre>
+		</details>
+	<?php endif; ?>
 	<p class="description"><?php echo wp_kses_post( sprintf( __( 'Emergency off switch: create an empty file named %1$s in %2$s, or add %3$s to wp-config.php.', 'wordgate' ), '<code>disable-waf</code>', '<code>' . esc_html( WORDGATE_DATA_DIR ) . '</code>', "<code>define( 'WORDGATE_WAF_DISABLE', true );</code>" ) ); ?></p>
 </div>
 

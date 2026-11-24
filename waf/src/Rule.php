@@ -58,10 +58,12 @@ final class Rule {
 	}
 
 	/**
-	 * Wrap a raw pattern in delimiters. '#' is escaped so patterns never need to.
+	 * Wrap a raw pattern in delimiters. Unescaped '#' characters are escaped so
+	 * patterns never need to, without double-escaping existing '\#' sequences.
 	 */
 	public static function compile( $pattern ) {
-		return '#' . str_replace( '#', '\\#', $pattern ) . '#iSs';
+		$escaped = (string) preg_replace( '/(?<!\\\\)((?:\\\\\\\\)*)#/', '$1\\#', (string) $pattern );
+		return '#' . $escaped . '#iSs';
 	}
 
 	/**
@@ -79,8 +81,9 @@ final class Rule {
 			return false;
 		}
 		if ( $this->paths ) {
+			$path = $request->decodedPath();
 			foreach ( $this->paths as $p ) {
-				if ( preg_match( self::compile( $p ), $request->path() ) ) {
+				if ( preg_match( self::compile( $p ), $path ) ) {
 					return true;
 				}
 			}

@@ -28,7 +28,9 @@ final class Notifications {
 		if ( $throttle > 0 && get_transient( $tkey ) ) {
 			return false;
 		}
-		set_transient( $tkey, 1, $throttle );
+		if ( $throttle > 0 ) {
+			set_transient( $tkey, 1, $throttle );
+		}
 		$site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 		$body .= "\n\n--\n" . sprintf(
 			/* translators: 1: site URL, 2: settings URL */
