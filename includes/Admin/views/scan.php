@@ -132,7 +132,13 @@ $wg_running = ScanRunner::isRunning();
 						<?php if ( in_array( $wg_issue['type'], array( 'core_update', 'plugin_update', 'theme_update', 'vulnerable_plugin', 'vulnerable_theme' ), true ) ) : ?>
 							<a class="button button-primary" href="<?php echo esc_url( admin_url( 'update-core.php' ) ); ?>"><?php esc_html_e( 'Go to updates', 'wordgate' ); ?></a>
 						<?php endif; ?>
-						<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'issue', array( 'id' => $wg_issue['id'], 'op' => 'ignore' ) ) ); ?>"><?php esc_html_e( 'Ignore', 'wordgate' ); ?></a>
+						<?php
+						$wg_is_admin_issue = in_array( $wg_issue['type'], array( 'suspicious_admin', 'admin_added', 'admin_no_role', 'suspicious_admin_name', 'hidden_admin_user' ), true );
+						if ( $wg_is_admin_issue && ! empty( $wg_data['user_id'] ) ) :
+							?>
+							<a class="button button-primary" href="<?php echo esc_url( get_edit_user_link( (int) $wg_data['user_id'] ) ); ?>"><?php esc_html_e( 'View user', 'wordgate' ); ?></a>
+						<?php endif; ?>
+						<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'issue', array( 'id' => $wg_issue['id'], 'op' => 'ignore' ) ) ); ?>"><?php echo $wg_is_admin_issue ? esc_html__( 'Trust this user', 'wordgate' ) : esc_html__( 'Ignore', 'wordgate' ); ?></a>
 					<?php elseif ( 'ignored' === $wg_issue['status'] ) : ?>
 						<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'issue', array( 'id' => $wg_issue['id'], 'op' => 'unignore' ) ) ); ?>"><?php esc_html_e( 'Stop ignoring', 'wordgate' ); ?></a>
 					<?php endif; ?>
