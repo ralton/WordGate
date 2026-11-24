@@ -29,7 +29,7 @@ final class ScanRunner {
 
 	const STATE  = 'wordgate_scan_state';
 	const LAST   = 'wordgate_last_scan';
-	const PHASES = array( 'core', 'plugins', 'vulns', 'index', 'files', 'checks', 'finish' );
+	const PHASES = array( 'core', 'plugins', 'vulns', 'index', 'files', 'database', 'checks', 'finish' );
 
 	/** @var array */
 	private static $state;
@@ -37,6 +37,8 @@ final class ScanRunner {
 	private static $verified;
 	/** @var Signatures|null */
 	private static $signatures;
+	/** @var Signatures|null */
+	private static $contentSignatures;
 
 	public static function register() {
 		add_action( 'wordgate_daily', array( __CLASS__, 'maybeScheduled' ) );
@@ -176,13 +178,14 @@ final class ScanRunner {
 
 	public static function publicState( array $s ) {
 		$labels = array(
-			'core'    => __( 'Checking WordPress core files', 'wordgate' ),
-			'plugins' => __( 'Checking plugin files', 'wordgate' ),
-			'vulns'   => __( 'Checking for known vulnerabilities', 'wordgate' ),
-			'index'   => __( 'Indexing files', 'wordgate' ),
-			'files'   => __( 'Scanning files for malware', 'wordgate' ),
-			'checks'  => __( 'Checking configuration', 'wordgate' ),
-			'finish'  => __( 'Finishing', 'wordgate' ),
+			'core'     => __( 'Checking WordPress core files', 'wordgate' ),
+			'plugins'  => __( 'Checking plugin files', 'wordgate' ),
+			'vulns'    => __( 'Checking for known vulnerabilities', 'wordgate' ),
+			'index'    => __( 'Indexing files', 'wordgate' ),
+			'files'    => __( 'Scanning files for malware', 'wordgate' ),
+			'database' => __( 'Scanning database content', 'wordgate' ),
+			'checks'   => __( 'Checking configuration', 'wordgate' ),
+			'finish'   => __( 'Finishing', 'wordgate' ),
 		);
 		return array(
 			'status' => $s['status'],
@@ -541,6 +544,260 @@ final class ScanRunner {
 		return true;
 	}
 
+	/**
+	 * Resumable database content scan: wp_options (siteurl/home tampering +
+	 * widgets/theme_mods/autoloaded options), wp_posts (public types + latest
+	 * revisions), and wp_comments (content + author URL). Uses indexed ID
+	 * cursors so 100k+ row sites complete within shared-hosting time budgets.
+	 */
+	private static function phaseDatabase( $deadline ) {
+		global $wpdb;
+		$sigs = self::contentSignatures();
+		if ( ! isset( self::$state['db'] ) || ! is_array( self::$state['db'] ) ) {
+			self::$state['db'] = array(
+				'stage'  => 'options_urls',
+				'cursor' => 0,
+			);
+		}
+		$db =& self::$state['db'];
+
+		// Stage 1: siteurl & home tampering check.
+		if ( 'options_urls' === $db['stage'] ) {
+			// phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+			$raw_urls = $wpdb->get_results(
+				"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ('siteurl','home')",
+				ARRAY_A
+			);
+			// phpcs:enable
+			$current = array( 'siteurl' => '', 'home' => '' );
+			foreach ( (array) $raw_urls as $r ) {
+				$current[ $r['option_name'] ] = (string) $r['option_value'];
+			}
+			$prev      = get_option( DatabaseAudit::URLS_OPTION, null );
+			$constants = array();
+			if ( defined( 'WP_SITEURL' ) && WP_SITEURL ) {
+				$constants['siteurl'] = (string) WP_SITEURL;
+			}
+			if ( defined( 'WP_HOME' ) && WP_HOME ) {
+				$constants['home'] = (string) WP_HOME;
+			}
+			$url_findings = DatabaseAudit::checkSiteUrls( $current, is_array( $prev ) ? $prev : null, $constants );
+			foreach ( $url_findings as $f ) {
+				self::issue( $f['type'], $f['severity'], $f['title'], $f['description'], '', $f['data'], $f['subject'] );
+			}
+			if ( null === $prev || empty( $url_findings ) ) {
+				update_option( DatabaseAudit::URLS_OPTION, $current, false );
+			}
+			$db['stage']  = 'options';
+			$db['cursor'] = 0;
+		}
+
+		// Stage 2: widgets, theme_mods, and suspicious autoloaded wp_options.
+		if ( 'options' === $db['stage'] ) {
+			while ( microtime( true ) < $deadline ) {
+				// phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT option_id, option_name, option_value
+						 FROM {$wpdb->options}
+						 WHERE option_id > %d
+						   AND option_name NOT LIKE %s
+						   AND option_name NOT LIKE %s
+						   AND option_name NOT LIKE %s
+						   AND (
+						     option_name LIKE %s
+						     OR option_name LIKE %s
+						     OR (
+						       autoload IN ('yes','on','auto','auto-on')
+						       AND (
+						         option_value LIKE %s
+						         OR option_value LIKE %s
+						         OR option_value LIKE %s
+						         OR option_value LIKE %s
+						         OR option_value LIKE %s
+						         OR option_value LIKE %s
+						       )
+						     )
+						   )
+						 ORDER BY option_id ASC
+						 LIMIT 100",
+						(int) $db['cursor'],
+						'wordgate\_%',
+						'\_transient\_%',
+						'\_site\_transient\_%',
+						'widget\_%',
+						'theme\_mods\_%',
+						'%<script%',
+						'%eval(%',
+						'%base64\_decode(%',
+						'%fromCharCode%',
+						'%<iframe%',
+						'%<?php%'
+					),
+					ARRAY_A
+				);
+				// phpcs:enable
+				if ( ! $rows ) {
+					$db['stage']  = 'posts';
+					$db['cursor'] = 0;
+					break;
+				}
+				foreach ( $rows as $row ) {
+					$db['cursor'] = (int) $row['option_id'];
+					$val          = (string) $row['option_value'];
+					if ( '' === $val || strlen( $val ) > 512 * 1024 ) {
+						continue;
+					}
+					foreach ( $sigs->scan( $val, 'option' ) as $hit ) {
+						self::issue(
+							'db_option',
+							$hit['severity'],
+							/* translators: 1: option name, 2: signature name */
+							sprintf( __( 'Suspicious content in option "%1$s": %2$s', 'wordgate' ), $row['option_name'], $hit['name'] ),
+							__( 'This wp_options value matches a known malicious injection pattern. Inspect the option in your database or widgets/customizer settings and remove injected code.', 'wordgate' ),
+							'',
+							array(
+								'db_type'   => 'option',
+								'option'    => $row['option_name'],
+								'signature' => $hit['id'],
+								'matched'   => $hit['matched'],
+							),
+							'db_option:' . $row['option_name'] . ':' . $hit['id']
+						);
+					}
+				}
+			}
+			if ( 'options' === $db['stage'] ) {
+				return false;
+			}
+		}
+
+		// Stage 3: wp_posts (all public post types + latest revision per post).
+		if ( 'posts' === $db['stage'] ) {
+			$public_types = array_values( get_post_types( array( 'public' => true ) ) );
+			if ( ! $public_types ) {
+				$public_types = array( 'post', 'page' );
+			}
+			$placeholders = implode( ',', array_fill( 0, count( $public_types ), '%s' ) );
+
+			while ( microtime( true ) < $deadline ) {
+				$params = array_merge( array( (int) $db['cursor'] ), $public_types );
+				// phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_type, post_parent, post_content
+						 FROM {$wpdb->posts}
+						 WHERE ID > %d
+						   AND post_status NOT IN ('auto-draft','trash')
+						   AND (
+						     post_type IN ({$placeholders})
+						     OR (
+						       post_type = 'revision'
+						       AND ID = (
+						         SELECT MAX(r.ID) FROM {$wpdb->posts} r
+						         WHERE r.post_parent = {$wpdb->posts}.post_parent AND r.post_type = 'revision'
+						       )
+						     )
+						   )
+						 ORDER BY ID ASC
+						 LIMIT 200",
+						$params
+					),
+					ARRAY_A
+				);
+				// phpcs:enable
+				if ( ! $rows ) {
+					$db['stage']  = 'comments';
+					$db['cursor'] = 0;
+					break;
+				}
+				foreach ( $rows as $row ) {
+					$db['cursor'] = (int) $row['ID'];
+					$content      = (string) $row['post_content'];
+					if ( '' === $content ) {
+						continue;
+					}
+					foreach ( $sigs->scan( $content, 'post' ) as $hit ) {
+						$edit_id = 'revision' === $row['post_type'] && ! empty( $row['post_parent'] ) ? (int) $row['post_parent'] : (int) $row['ID'];
+						$label   = '' !== trim( (string) $row['post_title'] ) ? $row['post_title'] : '#' . $edit_id;
+						self::issue(
+							'db_post',
+							$hit['severity'],
+							/* translators: 1: post type, 2: post title, 3: signature name */
+							sprintf( __( 'Suspicious content in %1$s "%2$s": %3$s', 'wordgate' ), $row['post_type'], $label, $hit['name'] ),
+							__( 'This post contains a pattern commonly used by injected scripts, redirects, or SEO spam. Open it in the editor to review and clean up any unexpected code.', 'wordgate' ),
+							'',
+							array(
+								'db_type'   => 'post',
+								'object_id' => $edit_id,
+								'post_type' => $row['post_type'],
+								'signature' => $hit['id'],
+								'matched'   => $hit['matched'],
+							),
+							'db_post:' . $row['ID'] . ':' . $hit['id']
+						);
+					}
+				}
+			}
+			if ( 'posts' === $db['stage'] ) {
+				return false;
+			}
+		}
+
+		// Stage 4: wp_comments (comment_content + comment_author_url).
+		if ( 'comments' === $db['stage'] ) {
+			while ( microtime( true ) < $deadline ) {
+				// phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT comment_ID, comment_post_ID, comment_author, comment_author_url, comment_content
+						 FROM {$wpdb->comments}
+						 WHERE comment_ID > %d
+						   AND comment_approved NOT IN ('trash','spam','post-trashed')
+						 ORDER BY comment_ID ASC
+						 LIMIT 200",
+						(int) $db['cursor']
+					),
+					ARRAY_A
+				);
+				// phpcs:enable
+				if ( ! $rows ) {
+					unset( self::$state['db'] );
+					return true;
+				}
+				foreach ( $rows as $row ) {
+					$db['cursor'] = (int) $row['comment_ID'];
+					$haystack     = (string) $row['comment_content'] . "\n" . (string) $row['comment_author_url'];
+					if ( '' === trim( $haystack ) ) {
+						continue;
+					}
+					foreach ( $sigs->scan( $haystack, 'comment' ) as $hit ) {
+						self::issue(
+							'db_comment',
+							$hit['severity'],
+							/* translators: 1: comment ID, 2: signature name */
+							sprintf( __( 'Suspicious content in comment #%1$d: %2$s', 'wordgate' ), (int) $row['comment_ID'], $hit['name'] ),
+							__( 'This comment contains a script injection or malicious markup pattern. Review it in the comment editor and delete or mark it as spam.', 'wordgate' ),
+							'',
+							array(
+								'db_type'   => 'comment',
+								'object_id' => (int) $row['comment_ID'],
+								'post_id'   => (int) $row['comment_post_ID'],
+								'signature' => $hit['id'],
+								'matched'   => $hit['matched'],
+							),
+							'db_comment:' . $row['comment_ID'] . ':' . $hit['id']
+						);
+					}
+				}
+			}
+			return false;
+		}
+
+		unset( self::$state['db'] );
+		return true;
+	}
+
 	private static function phaseChecks( $deadline ) {
 		global $wp_version;
 
@@ -851,6 +1108,14 @@ final class ScanRunner {
 			self::$signatures = Signatures::fromFile( file_exists( $custom ) ? $custom : WORDGATE_DIR . '/includes/Scanner/signatures.json' );
 		}
 		return self::$signatures;
+	}
+
+	private static function contentSignatures() {
+		if ( null === self::$contentSignatures ) {
+			$custom                  = WORDGATE_DATA_DIR . '/signatures.json';
+			self::$contentSignatures = Signatures::fromFile( file_exists( $custom ) ? $custom : WORDGATE_DIR . '/includes/Scanner/signatures.json', 'content_signatures' );
+		}
+		return self::$contentSignatures;
 	}
 
 	public static function isExecutable( $path ) {

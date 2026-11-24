@@ -27,6 +27,7 @@ final class Plugin {
 
 		Login\BruteForce::register();
 		Login\TwoFactor::register();
+		Login\PasswordGuard::register();
 		Login\AdminCookie::register();
 		Hardening\Hardening::register();
 		Firewall\NotFoundLimiter::register();

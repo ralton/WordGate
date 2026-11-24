@@ -18,10 +18,10 @@ global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wordgate_events" ); // phpcs:ignore
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wordgate_issues" ); // phpcs:ignore
 
-foreach ( array( 'wordgate_settings', 'wordgate_db_version', 'wordgate_auth_secret', 'wordgate_scan_state', 'wordgate_last_scan', 'wordgate_expected_waf_mode', 'wordgate_admin_snapshot' ) as $wordgate_opt ) {
+foreach ( array( 'wordgate_settings', 'wordgate_db_version', 'wordgate_auth_secret', 'wordgate_scan_state', 'wordgate_last_scan', 'wordgate_expected_waf_mode', 'wordgate_admin_snapshot', 'wordgate_site_urls' ) as $wordgate_opt ) {
 	delete_option( $wordgate_opt );
 }
-foreach ( array( 'wordgate_2fa', 'wordgate_2fa_pending', 'wordgate_2fa_grace_start' ) as $wordgate_meta ) {
+foreach ( array( 'wordgate_2fa', 'wordgate_2fa_pending', 'wordgate_2fa_grace_start', 'wordgate_pw_force_reset', 'wordgate_pw_breached_warn' ) as $wordgate_meta ) {
 	delete_metadata( 'user', 0, $wordgate_meta, '', true );
 }
 remove_role( 'wordgate_auditor' );

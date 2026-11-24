@@ -41,6 +41,9 @@ final class Settings {
 			'generic_login_errors'       => true,
 			'tfa_required_roles'         => array(),
 			'tfa_grace_days'             => 7,
+			'pw_guard_enabled'           => true,
+			'pw_hibp_enabled'            => true,
+			'pw_enforce_roles'           => array( 'administrator' ),
 
 			// Hardening.
 			'xmlrpc'                     => 'on', // on | no_auth | off.
@@ -176,6 +179,9 @@ final class Settings {
 		}
 		if ( isset( $out['tfa_required_roles'] ) ) {
 			$out['tfa_required_roles'] = array_values( array_map( 'sanitize_key', $out['tfa_required_roles'] ) );
+		}
+		if ( isset( $out['pw_enforce_roles'] ) ) {
+			$out['pw_enforce_roles'] = array_values( array_map( 'sanitize_key', $out['pw_enforce_roles'] ) );
 		}
 		if ( isset( $out['notify_email'] ) ) {
 			$out['notify_email'] = sanitize_email( $out['notify_email'] );

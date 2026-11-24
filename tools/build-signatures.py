@@ -60,14 +60,42 @@ sigs = [
        pattern=r"<div[^>]+style\s*=\s*['\"][^'\"]*(?:display\s*:\s*none|left\s*:\s*-\d{3,}px|position\s*:\s*absolute;\s*top\s*:\s*-\d{3,}px)[^'\"]*['\"][^>]*>\s*(?:<a\s[^>]*href[^>]*>[^<]*(?:viagra|cialis|casino|payday|replica|porn|escort)[^<]*</a>\s*){2,}"),
 ]
 
+DB_ALL = ["post", "comment", "option"]
+DB_COMMENT = ["comment"]
+
+content_sigs = [
+  dict(id="DB.JS.ScriptFromCharCode", name="Obfuscated String.fromCharCode payload", severity="high", types=DB_ALL,
+       pattern=r"String\.fromCharCode\s*\(\s*(?:\d+\s*,\s*){25,}"),
+  dict(id="DB.JS.DocumentWriteEval", name="document.write(unescape/atob) or eval(atob) injection", severity="critical", types=DB_ALL,
+       pattern=r"(?:document\.write\s*\(\s*(?:unescape|atob|decodeURIComponent)\s*\(|eval\s*\(\s*(?:atob|unescape|String\.fromCharCode)\s*\()"),
+  dict(id="DB.JS.PackerRedirect", name="Obfuscated packed JS redirect/loader", severity="high", types=DB_ALL,
+       pattern=r"eval\s*\(\s*function\s*\(\s*p\s*,\s*a\s*,\s*c\s*,\s*k\s*,\s*e\s*,\s*[dr]\s*\)[\s\S]{0,4000}?(?:window\.location|document\.location|\.src\s*=|createElement\s*\(\s*['\"]script['\"])"),
+  dict(id="DB.HTML.HiddenIframe", name="Hidden or zero-size external iframe", severity="high", types=DB_ALL,
+       pattern=r"<iframe\b(?=[^>]*\bsrc\s*=\s*['\"]?(?:https?:)?//(?!(?:www\.)?googletagmanager\.com/ns\.html\b))(?=[^>]*?(?:\b(?:width|height)\s*=\s*['\"]?[01](?:px)?['\"\s>]|display\s*:\s*none|visibility\s*:\s*hidden|left\s*:\s*-\d{3,}px))[^>]*>"),
+  dict(id="DB.HTML.MetaRefreshExternal", name="Injected meta-refresh redirect to external URL", severity="high", types=DB_ALL,
+       pattern=r"<meta\b[^>]*http-equiv\s*=\s*['\"]?refresh['\"]?[^>]*url\s*=\s*['\"]?https?://"),
+  dict(id="DB.Code.PhpOrEvalStored", name="PHP code or eval(base64_decode) stored in database", severity="critical", types=DB_ALL,
+       pattern=r"(?:<\?php\b[\s\S]{0,200}?\b(?:eval|assert|system|exec|passthru|shell_exec|base64_decode|gzinflate)\s*\(|\beval\s*\(\s*(?:base64_decode|gzinflate|\$_(?:GET|POST|REQUEST|COOKIE))\b)"),
+  dict(id="DB.JS.SuspiciousScriptSrc", name="Injected script tag from raw IP, data URI, or dropper URL", severity="high", types=DB_ALL,
+       pattern=r"<script\b[^>]*\bsrc\s*=\s*['\"]?(?:data\s*:\s*text/javascript|https?://\d{1,3}(?:\.\d{1,3}){3}[:/]|https?://[^'\"\s>]+/(?:get|stat|count|track|loader|go)\.php\?[^'\"\s>]*=)"),
+  dict(id="DB.HTML.HiddenSeoSpam", name="Hidden SEO spam link block", severity="medium", types=DB_ALL,
+       pattern=r"<(?:div|p|span)\b[^>]+style\s*=\s*['\"][^'\"]*(?:display\s*:\s*none|left\s*:\s*-\d{3,}px|top\s*:\s*-\d{3,}px|font-size\s*:\s*0(?:px|em|%)?)[^'\"]*['\"][^>]*>[\s\S]{0,600}?(?:<a\s[^>]*href[^>]*>[^<]*(?:viagra|cialis|casino|poker|slots|payday|replica|porn|escort|buy\s+cheap)[^<]*</a>[\s\S]{0,120}?){2,}"),
+  dict(id="DB.JS.Cryptominer", name="Browser cryptocurrency miner", severity="high", types=DB_ALL,
+       pattern=r"(?:coinhive\.min\.js|CoinHive\.Anonymous|coin-hive\.com|cryptoloot|webminepool|minero\.cc|new\s+CRLT\.Anonymous)"),
+  dict(id="DB.JS.InlineEventXss", name="Injected inline event handler payload", severity="high", types=DB_ALL,
+       pattern=r"<(?:img|svg|body|iframe|details)\b[^>]+[\s/\"']on(?:error|load|toggle)\s*=\s*['\"]?\s*(?:eval|atob|fetch|document\.(?:write|cookie|createElement)|window\.location|Function)\b"),
+  dict(id="DB.Comment.ScriptOrJsUri", name="Script tag or javascript: URI in comment", severity="high", types=DB_COMMENT,
+       pattern=r"(?:<\s*script\b|\bjavascript\s*:)"),
+]
+
 seen = set()
-for s in sigs:
-    assert s["id"] not in seen
+for s in sigs + content_sigs:
+    assert s["id"] not in seen, s["id"]
     seen.add(s["id"])
 
 here = os.path.dirname(os.path.abspath(__file__))
 path = os.path.join(here, "..", "includes", "Scanner", "signatures.json")
 with open(path, "w") as f:
-    json.dump({"schema": 1, "version": "2026.11.21", "signatures": sigs}, f, indent=1)
+    json.dump({"schema": 1, "version": "2026.11.23", "signatures": sigs, "content_signatures": content_sigs}, f, indent=1)
     f.write("\n")
-print(f"wrote {len(sigs)} signatures to {os.path.normpath(path)}")
+print(f"wrote {len(sigs)} file signatures and {len(content_sigs)} content signatures to {os.path.normpath(path)}")

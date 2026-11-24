@@ -39,6 +39,14 @@ $wg_users = get_users(
 		Admin::number( 'tfa_grace_days', __( 'Grace period', 'wordgate' ), '', __( 'days', 'wordgate' ) );
 		?>
 	</table>
+	<h2><?php esc_html_e( 'Breached & common passwords', 'wordgate' ); ?></h2>
+	<table class="form-table" role="presentation">
+		<?php
+		Admin::checkbox( 'pw_guard_enabled', __( 'Check for breached & common passwords', 'wordgate' ), __( 'Checks passwords on login, profile update, password reset, registration and WooCommerce account forms against a bundled common-password list.', 'wordgate' ) );
+		Admin::checkbox( 'pw_hibp_enabled', __( 'Check Have I Been Pwned (k-anonymity)', 'wordgate' ), __( 'Sends only the first 5 characters of the SHA-1 hash (with padding) to api.pwnedpasswords.com — never the password or full hash. Fails open if unreachable. Turn off for local-only checks.', 'wordgate' ) );
+		Admin::roles( 'pw_enforce_roles', __( 'Block & force reset for', 'wordgate' ), __( 'Selected roles cannot save a breached password and must change it after logging in. Other roles receive a warning.', 'wordgate' ) );
+		?>
+	</table>
 	<?php Admin::formEnd(); ?>
 </div>
 

@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "version": "2026.11.21",
+ "version": "2026.11.23",
  "signatures": [
   {
    "id": "PHP.Eval.Base64",
@@ -398,6 +398,127 @@
     "svg"
    ],
    "pattern": "<div[^>]+style\\s*=\\s*['\\\"][^'\\\"]*(?:display\\s*:\\s*none|left\\s*:\\s*-\\d{3,}px|position\\s*:\\s*absolute;\\s*top\\s*:\\s*-\\d{3,}px)[^'\\\"]*['\\\"][^>]*>\\s*(?:<a\\s[^>]*href[^>]*>[^<]*(?:viagra|cialis|casino|payday|replica|porn|escort)[^<]*</a>\\s*){2,}"
+  }
+ ],
+ "content_signatures": [
+  {
+   "id": "DB.JS.ScriptFromCharCode",
+   "name": "Obfuscated String.fromCharCode payload",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "String\\.fromCharCode\\s*\\(\\s*(?:\\d+\\s*,\\s*){25,}"
+  },
+  {
+   "id": "DB.JS.DocumentWriteEval",
+   "name": "document.write(unescape/atob) or eval(atob) injection",
+   "severity": "critical",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "(?:document\\.write\\s*\\(\\s*(?:unescape|atob|decodeURIComponent)\\s*\\(|eval\\s*\\(\\s*(?:atob|unescape|String\\.fromCharCode)\\s*\\()"
+  },
+  {
+   "id": "DB.JS.PackerRedirect",
+   "name": "Obfuscated packed JS redirect/loader",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "eval\\s*\\(\\s*function\\s*\\(\\s*p\\s*,\\s*a\\s*,\\s*c\\s*,\\s*k\\s*,\\s*e\\s*,\\s*[dr]\\s*\\)[\\s\\S]{0,4000}?(?:window\\.location|document\\.location|\\.src\\s*=|createElement\\s*\\(\\s*['\\\"]script['\\\"])"
+  },
+  {
+   "id": "DB.HTML.HiddenIframe",
+   "name": "Hidden or zero-size external iframe",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "<iframe\\b(?=[^>]*\\bsrc\\s*=\\s*['\\\"]?(?:https?:)?//(?!(?:www\\.)?googletagmanager\\.com/ns\\.html\\b))(?=[^>]*?(?:\\b(?:width|height)\\s*=\\s*['\\\"]?[01](?:px)?['\\\"\\s>]|display\\s*:\\s*none|visibility\\s*:\\s*hidden|left\\s*:\\s*-\\d{3,}px))[^>]*>"
+  },
+  {
+   "id": "DB.HTML.MetaRefreshExternal",
+   "name": "Injected meta-refresh redirect to external URL",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "<meta\\b[^>]*http-equiv\\s*=\\s*['\\\"]?refresh['\\\"]?[^>]*url\\s*=\\s*['\\\"]?https?://"
+  },
+  {
+   "id": "DB.Code.PhpOrEvalStored",
+   "name": "PHP code or eval(base64_decode) stored in database",
+   "severity": "critical",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "(?:<\\?php\\b[\\s\\S]{0,200}?\\b(?:eval|assert|system|exec|passthru|shell_exec|base64_decode|gzinflate)\\s*\\(|\\beval\\s*\\(\\s*(?:base64_decode|gzinflate|\\$_(?:GET|POST|REQUEST|COOKIE))\\b)"
+  },
+  {
+   "id": "DB.JS.SuspiciousScriptSrc",
+   "name": "Injected script tag from raw IP, data URI, or dropper URL",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "<script\\b[^>]*\\bsrc\\s*=\\s*['\\\"]?(?:data\\s*:\\s*text/javascript|https?://\\d{1,3}(?:\\.\\d{1,3}){3}[:/]|https?://[^'\\\"\\s>]+/(?:get|stat|count|track|loader|go)\\.php\\?[^'\\\"\\s>]*=)"
+  },
+  {
+   "id": "DB.HTML.HiddenSeoSpam",
+   "name": "Hidden SEO spam link block",
+   "severity": "medium",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "<(?:div|p|span)\\b[^>]+style\\s*=\\s*['\\\"][^'\\\"]*(?:display\\s*:\\s*none|left\\s*:\\s*-\\d{3,}px|top\\s*:\\s*-\\d{3,}px|font-size\\s*:\\s*0(?:px|em|%)?)[^'\\\"]*['\\\"][^>]*>[\\s\\S]{0,600}?(?:<a\\s[^>]*href[^>]*>[^<]*(?:viagra|cialis|casino|poker|slots|payday|replica|porn|escort|buy\\s+cheap)[^<]*</a>[\\s\\S]{0,120}?){2,}"
+  },
+  {
+   "id": "DB.JS.Cryptominer",
+   "name": "Browser cryptocurrency miner",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "(?:coinhive\\.min\\.js|CoinHive\\.Anonymous|coin-hive\\.com|cryptoloot|webminepool|minero\\.cc|new\\s+CRLT\\.Anonymous)"
+  },
+  {
+   "id": "DB.JS.InlineEventXss",
+   "name": "Injected inline event handler payload",
+   "severity": "high",
+   "types": [
+    "post",
+    "comment",
+    "option"
+   ],
+   "pattern": "<(?:img|svg|body|iframe|details)\\b[^>]+[\\s/\\\"']on(?:error|load|toggle)\\s*=\\s*['\\\"]?\\s*(?:eval|atob|fetch|document\\.(?:write|cookie|createElement)|window\\.location|Function)\\b"
+  },
+  {
+   "id": "DB.Comment.ScriptOrJsUri",
+   "name": "Script tag or javascript: URI in comment",
+   "severity": "high",
+   "types": [
+    "comment"
+   ],
+   "pattern": "(?:<\\s*script\\b|\\bjavascript\\s*:)"
   }
  ]
 }
