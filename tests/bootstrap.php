@@ -18,9 +18,11 @@ foreach ( array( 'IpUtil', 'Request', 'Transforms', 'Rule', 'Storage', 'Response
 }
 require_once __DIR__ . '/../includes/Login/Totp.php';
 require_once __DIR__ . '/../includes/Login/BruteForce.php';
+require_once __DIR__ . '/../includes/Login/PasswordGuard.php';
 require_once __DIR__ . '/../includes/Firewall/WafInstaller.php';
 require_once __DIR__ . '/../includes/TamperMonitor.php';
 require_once __DIR__ . '/../includes/Scanner/AdminAudit.php';
+require_once __DIR__ . '/../includes/Scanner/DatabaseAudit.php';
 require_once __DIR__ . '/../includes/Scanner/Signatures.php';
 require_once __DIR__ . '/../includes/Scanner/Vulnerabilities.php';
 
