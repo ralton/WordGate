@@ -325,6 +325,25 @@ final class Admin {
 				WafInstaller::uninstallExtended();
 				$result = true;
 				break;
+			case 'uploads_enable':
+				$result = WafInstaller::enableUploadsPhpProtection();
+				if ( true === $result ) {
+					Settings::update( array( 'disable_uploads_php' => true ) );
+					$test = WafInstaller::testUploadsPhpExecution();
+					$type = 'blocked_by_server' === $test['status'] ? 'success' : ( 'executed' === $test['status'] || 'error' === $test['status'] ? 'error' : 'warning' );
+					self::back( $type, __( 'Uploads .htaccess rule added.', 'wordgate' ) . ' ' . $test['message'] );
+				}
+				break;
+			case 'uploads_disable':
+				WafInstaller::disableUploadsPhpProtection();
+				Settings::update( array( 'disable_uploads_php' => false ) );
+				self::back( 'success', __( 'Uploads PHP protection rule removed.', 'wordgate' ) );
+				// No break needed after self::back() exits.
+			case 'uploads_test':
+				$test = WafInstaller::testUploadsPhpExecution();
+				$type = 'blocked_by_server' === $test['status'] ? 'success' : ( 'executed' === $test['status'] || 'error' === $test['status'] ? 'error' : 'warning' );
+				self::back( $type, $test['message'] );
+				// No break needed after self::back() exits.
 			default:
 				$result = new \WP_Error( 'op', 'Unknown operation' );
 		}

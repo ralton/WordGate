@@ -138,6 +138,7 @@ final class RestController {
 					'detected_server'   => WafInstaller::detectServer(),
 					'stub_exists'       => file_exists( WafInstaller::stubPath() ),
 					'mu_loader_exists'  => file_exists( WafInstaller::muPluginPath() ),
+					'uploads_php_disabled' => WafInstaller::isUploadsPhpDisabled(),
 					'rules_loaded'      => count( WafConfig::rules() ),
 					'disabled_rules'    => array_map( 'intval', (array) $settings['disabled_rules'] ),
 					'allow_rules'       => array_values( (array) $settings['allow_rules'] ),

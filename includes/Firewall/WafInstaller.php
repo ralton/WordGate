@@ -14,7 +14,8 @@ namespace WordGate\Firewall;
 
 final class WafInstaller {
 
-	const MARKER = 'WordGate WAF';
+	const MARKER         = 'WordGate WAF';
+	const UPLOADS_MARKER = 'WordGate Uploads Protection';
 
 	public static function muPluginPath() {
 		return WPMU_PLUGIN_DIR . '/wordgate-waf.php';
@@ -188,39 +189,212 @@ final class WafInstaller {
 		}
 	}
 
+	/* ---------------------------------------------------------------------
+	 * Uploads PHP execution protection
+	 * ------------------------------------------------------------------- */
+
+	public static function uploadsHtaccessPath() {
+		$uploads = wp_get_upload_dir();
+		return rtrim( (string) $uploads['basedir'], '/\\' ) . '/.htaccess';
+	}
+
+	/**
+	 * Apache 2.2 and 2.4 rules denying PHP execution in wp-content/uploads/.
+	 *
+	 * @return string[]
+	 */
+	public static function uploadsHtaccessLines() {
+		return array(
+			'<FilesMatch "(?i)\.(?:php\d?|phtml|phar|pht|phps)(?:\.|$)">',
+			"\t<IfModule mod_authz_core.c>",
+			"\t\tRequire all denied",
+			"\t</IfModule>",
+			"\t<IfModule !mod_authz_core.c>",
+			"\t\tOrder deny,allow",
+			"\t\tDeny from all",
+			"\t</IfModule>",
+			'</FilesMatch>',
+		);
+	}
+
+	public static function uploadsNginxSnippet( $uploadsRelPath = null ) {
+		if ( null === $uploadsRelPath ) {
+			$uploads        = function_exists( 'wp_get_upload_dir' ) ? wp_get_upload_dir() : array();
+			$url_path       = ! empty( $uploads['baseurl'] ) ? (string) parse_url( $uploads['baseurl'], PHP_URL_PATH ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions
+			$uploadsRelPath = '' !== $url_path ? '/' . trim( $url_path, '/' ) . '/' : '/wp-content/uploads/';
+		}
+		return 'location ~* ^' . $uploadsRelPath . ".*\\.(?:php\\d?|phtml|phar|pht|phps)(?:\\.|$) {\n\tdeny all;\n}";
+	}
+
+	public static function isUploadsPhpDisabled( $htaccessPath = null ) {
+		$file = null === $htaccessPath ? self::uploadsHtaccessPath() : $htaccessPath;
+		if ( ! file_exists( $file ) ) {
+			return false;
+		}
+		$content = (string) @file_get_contents( $file ); // phpcs:ignore
+		return false !== strpos( $content, '# BEGIN ' . self::UPLOADS_MARKER );
+	}
+
+	/**
+	 * @return true|\WP_Error|false
+	 */
+	public static function enableUploadsPhpProtection( $htaccessPath = null ) {
+		$file = null === $htaccessPath ? self::uploadsHtaccessPath() : $htaccessPath;
+		$dir  = dirname( $file );
+		if ( ! is_dir( $dir ) && ! ( function_exists( 'wp_mkdir_p' ) ? wp_mkdir_p( $dir ) : @mkdir( $dir, 0755, true ) ) ) { // phpcs:ignore
+			$msg = function_exists( '__' ) ? __( 'Could not create the uploads directory.', 'wordgate' ) : 'Could not create the uploads directory.';
+			return class_exists( '\\WP_Error' ) ? new \WP_Error( 'wordgate_uploads_dir', $msg ) : false;
+		}
+		return self::writeBlock( $file, self::uploadsHtaccessLines(), '#', self::UPLOADS_MARKER );
+	}
+
+	public static function disableUploadsPhpProtection( $htaccessPath = null ) {
+		$file = null === $htaccessPath ? self::uploadsHtaccessPath() : $htaccessPath;
+		self::removeBlock( $file, '#', self::UPLOADS_MARKER );
+	}
+
+	/**
+	 * Interpret the HTTP response of an uploads PHP execution probe.
+	 *
+	 * @return array{status:string,http_code:int}
+	 */
+	public static function evaluateUploadsProbe( $httpCode, $body, $wordgateHeader, $marker ) {
+		$httpCode = (int) $httpCode;
+		if ( false !== strpos( (string) $body, (string) $marker ) ) {
+			return array( 'status' => 'executed', 'http_code' => $httpCode );
+		}
+		if ( '' !== trim( (string) $wordgateHeader ) ) {
+			return array( 'status' => 'blocked_by_waf_only', 'http_code' => $httpCode );
+		}
+		if ( in_array( $httpCode, array( 403, 404, 405, 410 ), true ) ) {
+			return array( 'status' => 'blocked_by_server', 'http_code' => $httpCode );
+		}
+		if ( 200 === $httpCode ) {
+			return array( 'status' => 'served_raw', 'http_code' => $httpCode );
+		}
+		return array( 'status' => 'unknown', 'http_code' => $httpCode );
+	}
+
+	/**
+	 * Self-test: drop a harmless probe PHP file into uploads, request it over
+	 * HTTP, confirm PHP does not execute it, and always remove the probe.
+	 *
+	 * @return array{status:string,http_code:int,message:string}
+	 */
+	public static function testUploadsPhpExecution() {
+		$uploads = wp_get_upload_dir();
+		$dir     = rtrim( (string) $uploads['basedir'], '/\\' );
+		$baseUrl = rtrim( (string) $uploads['baseurl'], '/' );
+		if ( '' === $dir || ! is_dir( $dir ) || ! is_writable( $dir ) ) {
+			return array(
+				'status'    => 'error',
+				'http_code' => 0,
+				'message'   => __( 'Could not write a temporary probe file to the uploads directory. Check directory permissions.', 'wordgate' ),
+			);
+		}
+
+		$token = bin2hex( random_bytes( 8 ) );
+		$name  = 'wordgate-probe-' . $token . '.php';
+		$path  = $dir . '/' . $name;
+		$code  = "<?php echo 'WORDGATE_PROBE_{$token}_' . ( 19 + 23 );\n";
+		if ( false === @file_put_contents( $path, $code ) ) { // phpcs:ignore
+			return array(
+				'status'    => 'error',
+				'http_code' => 0,
+				'message'   => __( 'Could not write a temporary probe file to the uploads directory.', 'wordgate' ),
+			);
+		}
+
+		try {
+			$res = wp_remote_get(
+				$baseUrl . '/' . $name,
+				array(
+					'timeout'     => 10,
+					'redirection' => 0,
+				)
+			);
+		} finally {
+			if ( file_exists( $path ) ) {
+				@unlink( $path ); // phpcs:ignore
+			}
+		}
+
+		if ( is_wp_error( $res ) ) {
+			return array(
+				'status'    => 'error',
+				'http_code' => 0,
+				/* translators: %s: error message */
+				'message'   => sprintf( __( 'Self-test could not reach the uploads URL: %s', 'wordgate' ), $res->get_error_message() ),
+			);
+		}
+
+		$eval = self::evaluateUploadsProbe(
+			wp_remote_retrieve_response_code( $res ),
+			wp_remote_retrieve_body( $res ),
+			wp_remote_retrieve_header( $res, 'x-wordgate' ),
+			'WORDGATE_PROBE_' . $token . '_42'
+		);
+
+		switch ( $eval['status'] ) {
+			case 'blocked_by_server':
+				/* translators: %d: HTTP status code */
+				$msg = sprintf( __( 'Protected: the web server refused the probe PHP file (HTTP %d) before PHP ran.', 'wordgate' ), $eval['http_code'] );
+				break;
+			case 'blocked_by_waf_only':
+				$msg = __( 'Partial protection: the web server passed the probe file to PHP, and WordGate\'s firewall blocked it. On Nginx (or Apache with AllowOverride None), add the Nginx rule below for server-level protection.', 'wordgate' );
+				break;
+			case 'served_raw':
+				$msg = __( 'Not executed: the probe was served as plain text rather than executed as PHP. Adding a server deny rule is still recommended.', 'wordgate' );
+				break;
+			case 'executed':
+				$msg = __( 'Vulnerable: PHP executed the probe file inside uploads! Your web server ignored .htaccess — configure the Nginx / server deny rule below.', 'wordgate' );
+				break;
+			default:
+				/* translators: %d: HTTP status code */
+				$msg = sprintf( __( 'Unexpected HTTP %d response during self-test; verify your server configuration manually.', 'wordgate' ), $eval['http_code'] );
+		}
+
+		return array(
+			'status'    => $eval['status'],
+			'http_code' => $eval['http_code'],
+			'message'   => $msg,
+		);
+	}
+
 	/**
 	 * Insert / replace a marked block at the top of a config file.
 	 */
-	private static function writeBlock( $file, array $lines, $comment ) {
-		$begin    = "{$comment} BEGIN " . self::MARKER;
-		$end      = "{$comment} END " . self::MARKER;
+	public static function writeBlock( $file, array $lines, $comment, $marker = self::MARKER ) {
+		$begin    = "{$comment} BEGIN " . $marker;
+		$end      = "{$comment} END " . $marker;
 		$existing = file_exists( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore
-		$existing = self::stripBlock( $existing, $comment );
+		$existing = self::stripBlock( $existing, $comment, $marker );
 		$block    = $begin . "\n" . implode( "\n", $lines ) . "\n" . $end . "\n";
 		if ( false === @file_put_contents( $file, $block . $existing ) ) { // phpcs:ignore
-			return new \WP_Error(
-				'wordgate_write',
+			$msg = sprintf( 'Could not write %s. Check file permissions or configure this manually.', $file );
+			if ( function_exists( '__' ) ) {
 				/* translators: %s: file path */
-				sprintf( __( 'Could not write %s. Check file permissions or configure auto_prepend_file manually.', 'wordgate' ), $file )
-			);
+				$msg = sprintf( __( 'Could not write %s. Check file permissions or configure auto_prepend_file manually.', 'wordgate' ), $file );
+			}
+			return class_exists( '\\WP_Error' ) ? new \WP_Error( 'wordgate_write', $msg ) : false;
 		}
 		return true;
 	}
 
-	private static function removeBlock( $file, $comment ) {
+	public static function removeBlock( $file, $comment, $marker = self::MARKER ) {
 		if ( ! file_exists( $file ) ) {
 			return;
 		}
 		$content = (string) file_get_contents( $file ); // phpcs:ignore
-		$new     = self::stripBlock( $content, $comment );
+		$new     = self::stripBlock( $content, $comment, $marker );
 		if ( $new !== $content ) {
 			@file_put_contents( $file, $new ); // phpcs:ignore
 		}
 	}
 
-	private static function stripBlock( $content, $comment ) {
+	public static function stripBlock( $content, $comment, $marker = self::MARKER ) {
 		$c = preg_quote( $comment, '/' );
-		$m = preg_quote( self::MARKER, '/' );
+		$m = preg_quote( $marker, '/' );
 		return (string) preg_replace( "/{$c} BEGIN {$m}\n.*?{$c} END {$m}\n?/s", '', $content );
 	}
 }
