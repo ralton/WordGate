@@ -23,9 +23,9 @@ final class Signatures {
 		}
 	}
 
-	public static function fromFile( $file ) {
+	public static function fromFile( $file, $key = 'signatures' ) {
 		$data = json_decode( (string) file_get_contents( $file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-		return new self( is_array( $data ) && isset( $data['signatures'] ) ? $data['signatures'] : array() );
+		return new self( is_array( $data ) && isset( $data[ $key ] ) ? $data[ $key ] : array() );
 	}
 
 	public function count() {

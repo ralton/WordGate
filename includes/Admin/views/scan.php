@@ -138,6 +138,15 @@ $wg_running = ScanRunner::isRunning();
 							?>
 							<a class="button button-primary" href="<?php echo esc_url( get_edit_user_link( (int) $wg_data['user_id'] ) ); ?>"><?php esc_html_e( 'View user', 'wordgate' ); ?></a>
 						<?php endif; ?>
+						<?php if ( 'db_post' === $wg_issue['type'] && ! empty( $wg_data['object_id'] ) && get_edit_post_link( (int) $wg_data['object_id'], 'raw' ) ) : ?>
+							<a class="button button-primary" href="<?php echo esc_url( get_edit_post_link( (int) $wg_data['object_id'], 'raw' ) ); ?>"><?php esc_html_e( 'Edit post', 'wordgate' ); ?></a>
+						<?php endif; ?>
+						<?php if ( 'db_comment' === $wg_issue['type'] && ! empty( $wg_data['object_id'] ) ) : ?>
+							<a class="button button-primary" href="<?php echo esc_url( get_edit_comment_link( (int) $wg_data['object_id'] ) ); ?>"><?php esc_html_e( 'Edit comment', 'wordgate' ); ?></a>
+						<?php endif; ?>
+						<?php if ( in_array( $wg_issue['type'], array( 'option_url_tampered', 'option_url_changed' ), true ) ) : ?>
+							<a class="button button-primary" href="<?php echo esc_url( admin_url( 'options-general.php' ) ); ?>"><?php esc_html_e( 'General Settings', 'wordgate' ); ?></a>
+						<?php endif; ?>
 						<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'issue', array( 'id' => $wg_issue['id'], 'op' => 'ignore' ) ) ); ?>"><?php echo $wg_is_admin_issue ? esc_html__( 'Trust this user', 'wordgate' ) : esc_html__( 'Ignore', 'wordgate' ); ?></a>
 					<?php elseif ( 'ignored' === $wg_issue['status'] ) : ?>
 						<a class="button" href="<?php echo esc_url( Admin::actionUrl( 'issue', array( 'id' => $wg_issue['id'], 'op' => 'unignore' ) ) ); ?>"><?php esc_html_e( 'Stop ignoring', 'wordgate' ); ?></a>
