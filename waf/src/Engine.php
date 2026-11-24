@@ -54,7 +54,7 @@ final class Engine {
 			return $decision;
 		}
 
-		$this->currentPath = $request->path();
+		$this->currentPath = $request->decodedPath();
 		$ip = $request->ip();
 
 		// 1. Allowlist.
@@ -144,7 +144,7 @@ final class Engine {
 				continue;
 			}
 			if ( ! empty( $a['path'] ) ) {
-				if ( null === $this->currentPath || ! preg_match( Rule::compile( $a['path'] ), $this->currentPath ) ) {
+				if ( null === $this->currentPath || ! @preg_match( Rule::compile( $a['path'] ), $this->currentPath ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
 					continue;
 				}
 			}

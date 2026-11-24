@@ -13,7 +13,10 @@ final class Request {
 	/** Values longer than this are truncated before inspection (performance). */
 	const MAX_VALUE_LENGTH = 65536;
 
-	/** Bytes of each uploaded file that are inspected. */
+	/** Maximum JSON body size decoded into structured parameters before falling back. */
+	const MAX_JSON_BODY = 2097152;
+
+	/** Bytes read from the start (and end, for large uploads) of each uploaded file. */
 	const MAX_FILE_SNIFF = 65536;
 
 	/** @var string */
@@ -74,17 +77,20 @@ final class Request {
 
 		$rawBody = '';
 		$body    = $_POST;
-		$method  = isset( $_SERVER['REQUEST_METHOD'] ) ? (string) $_SERVER['REQUEST_METHOD'] : 'GET';
+		$method  = strtoupper( isset( $_SERVER['REQUEST_METHOD'] ) ? (string) $_SERVER['REQUEST_METHOD'] : 'GET' );
 		if ( 'GET' !== $method && 'HEAD' !== $method ) {
 			// php://input is re-readable since PHP 5.6, so WordPress still gets it.
-			$rawBody = (string) file_get_contents( 'php://input', false, null, 0, self::MAX_VALUE_LENGTH ); // phpcs:ignore WordPress.WP.AlternativeFunctions
-			$ctype   = isset( $headers['content-type'] ) ? strtolower( $headers['content-type'] ) : '';
-			if ( empty( $body ) && false !== strpos( $ctype, 'json' ) ) {
-				$decoded = json_decode( $rawBody, true );
+			$ctype  = isset( $headers['content-type'] ) ? strtolower( $headers['content-type'] ) : '';
+			$isJson = empty( $body ) && false !== strpos( $ctype, 'json' );
+			$limit  = $isJson ? self::MAX_JSON_BODY : self::MAX_VALUE_LENGTH;
+			$input  = (string) file_get_contents( 'php://input', false, null, 0, $limit ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			if ( $isJson && '' !== $input ) {
+				$decoded = json_decode( $input, true );
 				if ( is_array( $decoded ) ) {
 					$body = $decoded;
 				}
 			}
+			$rawBody = strlen( $input ) > self::MAX_VALUE_LENGTH ? substr( $input, 0, self::MAX_VALUE_LENGTH ) : $input;
 		}
 
 		$files = array();
@@ -148,6 +154,16 @@ final class Request {
 		return $this->path;
 	}
 
+	/**
+	 * URL-decoded, null-stripped, slash-collapsed path used for path scoping
+	 * and login-endpoint detection so encodings and PATH_INFO cannot evade rules.
+	 */
+	public function decodedPath() {
+		$path = rawurldecode( $this->path );
+		$path = str_replace( "\0", '', $path );
+		return (string) preg_replace( '#/{2,}#', '/', $path );
+	}
+
 	public function header( $name ) {
 		$name = strtolower( $name );
 		return isset( $this->headers[ $name ] ) ? $this->headers[ $name ] : '';
@@ -158,11 +174,10 @@ final class Request {
 	}
 
 	/**
-	 * Is this a request to a login endpoint?
+	 * Is this a request to a login endpoint (including PATH_INFO / encoded forms)?
 	 */
 	public function isLoginRequest() {
-		$base = strtolower( basename( $this->path ) );
-		return 'wp-login.php' === $base || 'xmlrpc.php' === $base;
+		return (bool) preg_match( '#(?:^|/)(?:wp-login|xmlrpc)\.php(?:/|$)#i', $this->decodedPath() );
 	}
 
 	/**
@@ -226,9 +241,21 @@ final class Request {
 			case 'file_contents':
 				foreach ( $this->files as $field => $f ) {
 					if ( '' !== $f['tmp_name'] && is_uploaded_file( $f['tmp_name'] ) ) {
-						$out[ $field ] = (string) file_get_contents( $f['tmp_name'], false, null, 0, self::MAX_FILE_SNIFF ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+						$size = @filesize( $f['tmp_name'] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+						$head = (string) file_get_contents( $f['tmp_name'], false, null, 0, self::MAX_FILE_SNIFF ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+						if ( false !== $size && $size > self::MAX_FILE_SNIFF ) {
+							$tail          = (string) file_get_contents( $f['tmp_name'], false, null, max( self::MAX_FILE_SNIFF, $size - self::MAX_FILE_SNIFF ), self::MAX_FILE_SNIFF ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+							$out[ $field ] = $head . "\n" . $tail;
+						} else {
+							$out[ $field ] = $head;
+						}
 					} elseif ( isset( $f['content'] ) ) { // Test harness.
-						$out[ $field ] = substr( (string) $f['content'], 0, self::MAX_FILE_SNIFF );
+						$content = (string) $f['content'];
+						if ( strlen( $content ) > self::MAX_FILE_SNIFF ) {
+							$out[ $field ] = substr( $content, 0, self::MAX_FILE_SNIFF ) . "\n" . substr( $content, -self::MAX_FILE_SNIFF );
+						} else {
+							$out[ $field ] = $content;
+						}
 					}
 				}
 				break;

@@ -245,14 +245,23 @@ final class ScanRunner {
 		self::addVerified( $verified );
 
 		// Files in wp-admin / wp-includes that are not part of WordPress.
-		$skip_names = array( 'error_log', '.DS_Store', 'php_errorlog', '.htaccess' );
+		$skip_names = array( 'error_log', '.DS_Store', 'php_errorlog' );
 		foreach ( array( 'wp-admin', 'wp-includes' ) as $dir ) {
 			foreach ( self::walk( ABSPATH . $dir ) as $path ) {
-				$rel = substr( $path, strlen( ABSPATH ) );
-				if ( isset( $checksums[ $rel ] ) || in_array( basename( $path ), $skip_names, true ) ) {
+				$rel  = substr( $path, strlen( ABSPATH ) );
+				$base = basename( $path );
+				if ( isset( $checksums[ $rel ] ) || in_array( $base, $skip_names, true ) ) {
 					continue;
 				}
-				$is_code = self::isExecutable( $path );
+				// Allow a benign wp-admin/.htaccess (e.g. HTTP auth), but flag
+				// .htaccess in wp-includes or any PHP-execution directives.
+				if ( '.htaccess' === $base && 'wp-admin' === $dir ) {
+					$ht = (string) @file_get_contents( $path, false, null, 0, 16384 ); // phpcs:ignore
+					if ( ! preg_match( '/\b(?:AddType|AddHandler|SetHandler|php_value|auto_prepend_file|auto_append_file)\b/i', $ht ) ) {
+						continue;
+					}
+				}
+				$is_code = self::isExecutable( $path ) || '.htaccess' === $base;
 				self::issue(
 					'core_unknown',
 					$is_code ? 'high' : 'medium',
@@ -433,13 +442,16 @@ final class ScanRunner {
 	}
 
 	private static function phaseIndex( $deadline ) {
-		$list     = self::tempFile( 'scan-files.txt' );
-		$fp       = fopen( $list, 'w' ); // phpcs:ignore
-		$verified = self::verified();
-		$exts     = array_flip( array_merge( self::signatures()->extensions(), array( 'php', 'phtml', 'php5', 'php7', 'phar' ) ) );
-		$skip     = array( realpath( WORDGATE_DATA_DIR ), realpath( WP_CONTENT_DIR . '/upgrade' ) );
-		$roots    = array( ABSPATH );
-		if ( 0 !== strpos( realpath( WP_CONTENT_DIR ), realpath( ABSPATH ) ) ) {
+		$list = self::tempFile( 'scan-files.php' );
+		$fp   = fopen( $list, 'w' ); // phpcs:ignore
+		fwrite( $fp, "<?php exit; // WordGate scan index ?>\n" ); // phpcs:ignore
+		$verified     = self::verified();
+		$exts         = array_flip( array_merge( self::signatures()->extensions(), array( 'php', 'phtml', 'php5', 'php7', 'phar' ) ) );
+		$skip         = array( realpath( WORDGATE_DATA_DIR ), realpath( WP_CONTENT_DIR . '/upgrade' ) );
+		$roots        = array( ABSPATH );
+		$abs_real     = realpath( ABSPATH );
+		$content_real = realpath( WP_CONTENT_DIR );
+		if ( $content_real && ( ! $abs_real || 0 !== strpos( rtrim( $content_real, '/' ) . '/', rtrim( $abs_real, '/' ) . '/' ) ) ) {
 			$roots[] = WP_CONTENT_DIR;
 		}
 		$uploads = wp_get_upload_dir();
@@ -466,7 +478,7 @@ final class ScanRunner {
 	}
 
 	private static function phaseFiles( $deadline ) {
-		$list = self::tempFile( 'scan-files.txt' );
+		$list = self::tempFile( 'scan-files.php' );
 		if ( ! file_exists( $list ) ) {
 			return true;
 		}
@@ -478,6 +490,9 @@ final class ScanRunner {
 
 		while ( false !== ( $line = fgets( $fp ) ) ) { // phpcs:ignore
 			$path = rtrim( $line, "\n" );
+			if ( '' === $path || 0 === strpos( $path, '<?php' ) ) {
+				continue;
+			}
 			++self::$state['stats']['files_scanned'];
 
 			if ( is_file( $path ) && is_readable( $path ) ) {
@@ -605,6 +620,39 @@ final class ScanRunner {
 			}
 			if ( $without ) {
 				self::issue( 'admins_no_2fa', 'low', sprintf( _n( '%d administrator has no two-factor authentication', '%d administrators have no two-factor authentication', $without, 'wordgate' ), $without ), __( 'Two-factor authentication stops account takeover even when a password is stolen. Require it for administrators under WordGate → Login Security.', 'wordgate' ), '', array(), 'admins_no_2fa' );
+			}
+		}
+
+		// Verify WordGate's data directory and .user.ini are not publicly downloadable (e.g. Nginx without deny rules).
+		$data_real    = realpath( WORDGATE_DATA_DIR );
+		$content_real = realpath( WP_CONTENT_DIR );
+		if ( $data_real && $content_real && 0 === strpos( $data_real, rtrim( $content_real, '/' ) . '/' ) && file_exists( WORDGATE_DATA_DIR . '/.htaccess' ) ) {
+			$rel_data = ltrim( substr( $data_real, strlen( rtrim( $content_real, '/' ) ) ), '/' );
+			$probe    = wp_remote_get( content_url( $rel_data . '/.htaccess' ), array( 'timeout' => 5, 'redirection' => 0 ) );
+			if ( ! is_wp_error( $probe ) && 200 === wp_remote_retrieve_response_code( $probe ) && false !== strpos( wp_remote_retrieve_body( $probe ), 'Require all denied' ) ) {
+				self::issue(
+					'data_dir_exposed',
+					'high',
+					__( 'WordGate data directory is publicly accessible over HTTP', 'wordgate' ),
+					__( 'Your web server (likely Nginx) is ignoring .htaccess in wp-content/wordgate/, allowing direct downloads of non-PHP files such as attack-log.jsonl. Add a server deny rule for wp-content/wordgate/ (see WordGate → Firewall).', 'wordgate' ),
+					WORDGATE_DATA_DIR,
+					array(),
+					'data_dir_exposed'
+				);
+			}
+		}
+		if ( file_exists( ABSPATH . '.user.ini' ) ) {
+			$probe = wp_remote_get( home_url( '/.user.ini' ), array( 'timeout' => 5, 'redirection' => 0 ) );
+			if ( ! is_wp_error( $probe ) && 200 === wp_remote_retrieve_response_code( $probe ) && false !== strpos( wp_remote_retrieve_body( $probe ), 'auto_prepend_file' ) ) {
+				self::issue(
+					'user_ini_exposed',
+					'medium',
+					__( '.user.ini is publicly accessible over HTTP', 'wordgate' ),
+					__( 'Your web server is serving /.user.ini directly, revealing server file paths. Block access to .user.ini in your web server configuration (see WordGate → Firewall).', 'wordgate' ),
+					ABSPATH . '.user.ini',
+					array(),
+					'user_ini_exposed'
+				);
 			}
 		}
 		return true;
@@ -794,10 +842,12 @@ final class ScanRunner {
 	private static function verified() {
 		if ( null === self::$verified ) {
 			self::$verified = array();
-			$file           = self::tempFile( 'scan-verified.txt' );
+			$file           = self::tempFile( 'scan-verified.php' );
 			if ( file_exists( $file ) ) {
 				foreach ( file( $file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) as $p ) {
-					self::$verified[ $p ] = true;
+					if ( 0 !== strpos( $p, '<?php' ) ) {
+						self::$verified[ $p ] = true;
+					}
 				}
 			}
 		}
@@ -806,15 +856,17 @@ final class ScanRunner {
 
 	private static function addVerified( array $paths ) {
 		if ( $paths ) {
-			file_put_contents( self::tempFile( 'scan-verified.txt' ), implode( "\n", $paths ) . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore
+			$file = self::tempFile( 'scan-verified.php' );
+			$head = ! file_exists( $file ) ? "<?php exit; // WordGate verified index ?>\n" : '';
+			file_put_contents( $file, $head . implode( "\n", $paths ) . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore
 			self::$verified = null;
 		}
 	}
 
 	private static function cleanupTemp() {
-		foreach ( array( 'scan-files.txt', 'scan-verified.txt' ) as $f ) {
+		foreach ( array( 'scan-files.php', 'scan-verified.php', 'scan-files.txt', 'scan-verified.txt' ) as $f ) {
 			if ( file_exists( WORDGATE_DATA_DIR . '/' . $f ) ) {
-				unlink( WORDGATE_DATA_DIR . '/' . $f ); // phpcs:ignore
+				@unlink( WORDGATE_DATA_DIR . '/' . $f ); // phpcs:ignore
 			}
 		}
 		self::$verified = null;

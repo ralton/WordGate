@@ -145,18 +145,40 @@ final class WafInstaller {
 	 * Remove extended protection.
 	 *
 	 * PHP caches .user.ini for user_ini.cache_ttl seconds (default 300). If we
-	 * deleted the stub immediately, PHP would keep trying to prepend a missing
-	 * file and every request would fatal. So we neuter the stub now and delete
-	 * it later from cron.
+	 * deleted an actively prepended .user.ini stub immediately, PHP would keep
+	 * trying to prepend a missing file and every request would fatal. When the
+	 * stub is not actively prepended via .user.ini, delete it right away;
+	 * otherwise neuter it now and schedule deletion after the cache TTL.
+	 *
+	 * @param bool $deactivating When true (plugin deactivation), do not leave an
+	 *                           orphaned cron event that can never fire.
 	 */
-	public static function uninstallExtended() {
+	public static function uninstallExtended( $deactivating = false ) {
+		$status        = self::status();
+		$activeUserIni = 'extended' === $status['mode'] && 'user-ini' === self::detectServer();
+
 		self::removeBlock( ABSPATH . '.htaccess', '#' );
 		self::removeBlock( ABSPATH . '.user.ini', ';' );
+
 		if ( file_exists( self::stubPath() ) ) {
+			if ( ! $activeUserIni ) {
+				@unlink( self::stubPath() ); // phpcs:ignore
+				wp_clear_scheduled_hook( 'wordgate_delete_waf_stub' );
+				return;
+			}
 			@file_put_contents( self::stubPath(), "<?php\n// WordGate WAF has been removed. This file is deleted automatically.\n" ); // phpcs:ignore
-			$ttl = (int) ini_get( 'user_ini.cache_ttl' );
-			wp_schedule_single_event( time() + max( 300, $ttl ) + 120, 'wordgate_delete_waf_stub' );
+			if ( ! $deactivating ) {
+				$ttl = (int) ini_get( 'user_ini.cache_ttl' );
+				wp_schedule_single_event( time() + max( 300, $ttl ) + 120, 'wordgate_delete_waf_stub' );
+			}
 		}
+	}
+
+	/**
+	 * Nginx deny rule needed because Nginx ignores .htaccess files.
+	 */
+	public static function nginxSnippet() {
+		return "location ~* /(\\.user\\.ini|wp-content/wordgate/) {\n\tdeny all;\n}";
 	}
 
 	public static function deleteStub() {
